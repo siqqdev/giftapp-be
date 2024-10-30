@@ -7,12 +7,16 @@ import { UserController } from './user/user.controller';
 import { UserService } from './user/user.service';
 import { User } from './user/user.schema';
 import { UserModule } from './user/user.module';
+import { GiftModule } from './gift/gift.module';
+import { ActionModule } from './action/action.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     MongooseModule.forRoot(process.env.MONGO_CONNECTION),
     UserModule,
+    GiftModule,
+    ActionModule
   ],
   controllers: [AppController],
   providers: [AppService]

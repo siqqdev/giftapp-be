@@ -53,7 +53,7 @@ export class Action {
 export const ActionSchema = SchemaFactory.createForClass(Action);
 
 @Schema()
-export class BuyAction extends Action {
+export class BuyAction {
   @Prop({ required: true })
   amount: string;
 
@@ -64,7 +64,7 @@ export class BuyAction extends Action {
 export const BuyActionSchema = SchemaFactory.createForClass(BuyAction);
 
 @Schema()
-export class TransferAction extends Action {
+export class TransferAction {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   toUser: Types.ObjectId;
 }
