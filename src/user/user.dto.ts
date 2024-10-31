@@ -1,12 +1,10 @@
 
-import { IsString } from 'class-validator';
+import { IsNotEmpty, IsString, Matches } from 'class-validator';
 
 export class CreateUserDto {
-  @IsString()
-  name: string;
-}
-
-export class UpdateUserDto {
-  @IsString()
-  name: string;
+  @IsNotEmpty()
+  @Matches(/^\d+$/, { 
+      message: 'Telegram ID must be a valid numeric string'
+  })
+  id: string;
 }

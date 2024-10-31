@@ -1,28 +1,32 @@
-import { Controller, Get, Param, Post, Body, Put } from "@nestjs/common";
-import { CreateUserDto, UpdateUserDto } from "./user.dto";
+import { Controller, Get, Param, Post, Body, Put, BadRequestException, ConflictException } from "@nestjs/common";
+import { CreateUserDto } from "./user.dto";
 import { UserService } from "./user.service";
+import { User } from "./user.schema";
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+    constructor(private readonly usersService: UserService) {}
 
-  @Get()
-  async findAll(): Promise<any> {
-    return this.userService.findAll();
-  }
+    @Post()
+    async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
+        try {
+            BigInt(createUserDto.id);
+        } catch {
+            throw new BadRequestException('Invalid Telegram ID format');
+        }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<any> {
-    return this.userService.findOne(id);
-  }
+        try {
+            return await this.usersService.create(createUserDto);
+        } catch (error) {
+            if (error.code === 11000) {
+                throw new ConflictException('User with this Telegram ID already exists');
+            }
+            throw error;
+        }
+    }
 
-  @Post()
-  async create(@Body() createUserDto: CreateUserDto): Promise<any> {
-    return this.userService.create(createUserDto);
-  }
-
-  @Put(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<any> {
-    return this.userService.update(id, updateUserDto);
-  }
+    @Get(':id')
+    async getUser(@Param('id') id: string): Promise<User> {
+        return this.usersService.findById(BigInt(id));
+    }
 }

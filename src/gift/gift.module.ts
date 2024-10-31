@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { BoughtGift, BoughtGiftSchema, Gift, GiftSchema, SendedGift, SendedGiftSchema } from "./gift.schema";
+import { GiftController } from "./gift.controller";
+import { GiftService } from "./gift.service";
 
 @Module({
     imports: [
@@ -18,6 +20,12 @@ import { BoughtGift, BoughtGiftSchema, Gift, GiftSchema, SendedGift, SendedGiftS
                 schema: SendedGiftSchema
             }
         ])
+    ],
+    controllers: [
+        GiftController
+    ],
+    providers: [
+        GiftService
     ]
 })
 export class GiftModule { }
