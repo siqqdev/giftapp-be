@@ -3,7 +3,7 @@ import { InjectModel, InjectConnection } from "@nestjs/mongoose";
 import { Model, Connection, Types } from "mongoose";
 import { Gift, BoughtGift } from "src/gift/gift.schema";
 import { User } from "src/user/user.schema";
-import { Action } from "./action.schema";
+import { Action, BuyAction } from "./action.schema";
 
 @Injectable()
 export class BuyGiftService {
@@ -17,67 +17,70 @@ export class BuyGiftService {
 
     async buyGift(userId: string, giftId: string): Promise<Action> {
         const session = await this.connection.startSession();
-        session.startTransaction();
+        let buyAction: Action | null = null;
 
         try {
-            // Find user and gift
-            const [user, gift] = await Promise.all([
-                this.userModel.findOne({ id: userId }).session(session),
-                this.giftModel.findById(giftId).session(session)
-            ]);
+            await session.withTransaction(async () => {
+                // Find user and gift
+                const [user, gift] = await Promise.all([
+                    this.userModel.findOne({ id: userId }).session(session),
+                    this.giftModel.findById(giftId).session(session)
+                ]);
 
-            // Validate existence
-            if (!user) {
-                throw new NotFoundException(`User with ID ${userId} not found`);
-            }
-            if (!gift) {
-                throw new NotFoundException(`Gift with ID ${giftId} not found`);
-            }
+                // Validate existence
+                if (!user) {
+                    throw new NotFoundException(`User with ID ${userId} not found`);
+                }
+                if (!gift) {
+                    throw new NotFoundException(`Gift with ID ${giftId} not found`);
+                }
 
-            // Check if gift is available
-            const availableAmount = gift.totalAmount - gift.soldAmount;
-            if (availableAmount <= 0) {
-                throw new BadRequestException('Gift is out of stock');
-            }
+                // Check if gift is available
+                const availableAmount = gift.totalAmount - gift.soldAmount;
+                if (availableAmount <= 0) {
+                    throw new BadRequestException('Gift is out of stock');
+                }
 
-            // Create buy action
-            const buyAction = await this.actionModel.create([{
-                type: 'buy',
-                user: user._id,
-                gift: new Types.ObjectId(giftId),
-                date: new Date(),
-                status: 'pending',
-                amount: gift.price,
-                asset: gift.asset
-            }], { session });
+                // Create buy action
+                const [createdAction] = await this.actionModel.create([{
+                    type: BuyAction.name,
+                    user: user.id,
+                    gift: new Types.ObjectId(giftId),
+                    date: new Date(),
+                    status: 'pending',
+                    amount: gift.price,
+                    asset: gift.asset
+                }], { session });
 
-            // Create bought gift record
-            const boughtGift = await this.boughtGiftModel.create([{
-                name: gift.name,
-                purchaseDate: new Date(),
-                user: user._id,
-                gift: new Types.ObjectId(giftId)
-            }], { session });
+                buyAction = createdAction; // Store for return value
 
-            // Update gift sold amount
-            await this.giftModel.findByIdAndUpdate(
-                giftId,
-                { $inc: { soldAmount: 1 } },
-                { session, new: true }
-            );
+                // Create bought gift record
+                await this.boughtGiftModel.create([{
+                    name: gift.name,
+                    purchaseDate: new Date(),
+                    user: user.id,
+                    gift: new Types.ObjectId(giftId)
+                }], { session });
 
-            // Update action status to completed
-            await this.actionModel.findByIdAndUpdate(
-                buyAction[0]._id,
-                { status: 'completed' },
-                { session }
-            );
+                // Update gift sold amount
+                await this.giftModel.findByIdAndUpdate(
+                    giftId,
+                    { $inc: { soldAmount: 1 } },
+                    { session, new: true }
+                );
 
-            await session.commitTransaction();
-            return buyAction[0];
+                // Update action status to completed
+                await this.actionModel.findByIdAndUpdate(
+                    createdAction._id,
+                    { status: 'completed' },
+                    { session }
+                );
+            });
+
+            return buyAction;
 
         } catch (error) {
-            await session.abortTransaction();
+            console.error(error);
             
             if (error instanceof NotFoundException || error instanceof BadRequestException) {
                 throw error;
@@ -87,7 +90,7 @@ export class BuyGiftService {
                 'Failed to process gift purchase. Please try again.'
             );
         } finally {
-            session.endSession();
+            await session.endSession();
         }
     }
 }
