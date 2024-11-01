@@ -5,6 +5,8 @@ import { GiftActionController } from "./giftAction.controller";
 import { BuyGiftService } from "./buyGift.service";
 import { Gift, GiftSchema, BoughtGift, BoughtGiftSchema } from "src/gift/gift.schema";
 import { User, UserSchema } from "src/user/user.schema";
+import { ActionController } from "./action.controller";
+import { ActionService } from "./action.service";
 
 @Module({
     imports: [
@@ -23,10 +25,12 @@ import { User, UserSchema } from "src/user/user.schema";
         ])
     ],
     controllers: [
-        GiftActionController
+        GiftActionController,
+        ActionController
     ],
     providers: [
-        BuyGiftService
+        BuyGiftService,
+        ActionService
     ]
 })
 export class ActionModule {}
