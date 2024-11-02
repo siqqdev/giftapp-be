@@ -18,21 +18,21 @@ export class UserController {
         return this.usersService.findByIdOrCreate(user.id)
     }
 
-    @Get(':id')
-    async getUser(@Param('id') id: string): Promise<User> {
-        if (USER_ID_REGEX.test(id)) {
-            throw new BadRequestException('User ID is invalid');
-        }
-        return this.usersService.findById(id);
-    }
-
-    @Get(':id/bought-gifts')
+    @Get('bought-gifts')
     async getUserBoughtGifts(@GetUser() user: AuthUser): Promise<BoughtGift[]> {
         if (USER_ID_REGEX.test(user.id)) {
             throw new BadRequestException('User ID is invalid');
         }
 
         return await this.usersService.getBoughtGifts(user.id);
+    }
+
+    @Get(':id')
+    async getUser(@Param('id') id: string): Promise<User> {
+        if (USER_ID_REGEX.test(id)) {
+            throw new BadRequestException('User ID is invalid');
+        }
+        return this.usersService.findById(id);
     }
 
     @Get(':id/sended-gifts')

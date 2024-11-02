@@ -5,7 +5,6 @@ import { User } from './user.schema';
 import { BoughtGift, SendedGift } from 'src/gift/gift.schema';
 
 @Injectable()
-@Injectable()
 export class UserService {
     constructor(
         @InjectModel(User.name) private readonly userModel: Model<User>,
@@ -20,19 +19,17 @@ export class UserService {
         }
         return user;
     }
-
     
-    async findById(id: string): Promise<User> {
-        const userId = BigInt(id);
+    async findById(userId: string): Promise<User> {
         const user = await this.userModel.findOne({ id: userId }).exec();
         if (!user) {
-            throw new NotFoundException(`User with ID ${id} not found`);
+            throw new NotFoundException(`User with ID ${userId} not found`);
         }
         return user;
     }
 
     async getBoughtGifts(userId: string): Promise<BoughtGift[]> {
-        const user = await this.boughtGiftModel.findById(userId);
+        const user = await this.userModel.findOne({ id: userId });
         
         return this.boughtGiftModel.find({ user: user.id })
             .sort({ purchaseDate: -1 })
@@ -40,12 +37,11 @@ export class UserService {
     }
 
     async getSendedGifts(userId: string): Promise<SendedGift[]> {
-        const user = await this.sendedGiftModel.findById(userId);
+        const user = await this.sendedGiftModel.findOne({ id: userId });
 
         return this.sendedGiftModel.find({
             $or: [
-                { owner: userId },
-                { sendedBy: userId }
+                { owner: userId }
             ]
         })
         .populate('gift')

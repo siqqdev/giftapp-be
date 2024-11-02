@@ -29,8 +29,8 @@ export class BoughtGift {
     @Prop({ required: true })
     purchaseDate: Date;
     
-    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-    user: Types.ObjectId;
+    @Prop({ type: String, ref: 'User', required: true })
+    user: String;
 
     @Prop({ type: Types.ObjectId, ref: 'Gift', required: true })
     gift: Types.ObjectId;
