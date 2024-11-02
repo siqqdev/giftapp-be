@@ -1,22 +1,25 @@
 import { Controller, Get, Param, NotFoundException, BadRequestException, InternalServerErrorException, Query } from "@nestjs/common";
 import { PaginationQueryDto } from "./action.dto";
 import { ActionService } from "./action.service";
+import { USER_ID_REGEX } from "src/utils/userid.regex";
+import { GetUser } from "src/auth/auth.decorator";
+import { AuthUser } from "src/auth/auth.guard";
 
 @Controller('actions')
 export class ActionController {
     constructor(private readonly actionService: ActionService) {}
 
-    @Get('user/:id')
+    @Get('user')
     async getUserActions(
-        @Param('id') userId: string,
+        @GetUser() user: AuthUser,
         @Query() query: PaginationQueryDto
     ) {
-        if (!/^\d+$/.test(userId)) {
+        if (USER_ID_REGEX.test(user.id)) {
             throw new BadRequestException('User ID is invalid');
         }
 
         const { items, total } = await this.actionService.getRecentActionsByUser(
-            userId,
+            user.id,
             query.page,
             query.limit
         );

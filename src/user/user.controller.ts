@@ -1,65 +1,46 @@
-import { Controller, Get, Param, Post, Body, Put, BadRequestException, ConflictException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { CreateUserDto } from "./user.dto";
+import { Controller, Get, Param, BadRequestException } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { User } from "./user.schema";
 import { BoughtGift, SendedGift } from "src/gift/gift.schema";
+import { USER_ID_REGEX } from "src/utils/userid.regex";
+import { AuthUser } from "src/auth/auth.guard";
+import { GetUser } from "src/auth/auth.decorator";
 
 @Controller('users')
 export class UserController {
     constructor(private readonly usersService: UserService) {}
 
-    @Post()
-    async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
-        try {
-            BigInt(createUserDto.id);
-        } catch {
-            throw new BadRequestException('Invalid Telegram ID format');
+    @Get('me')
+    async getMe(@GetUser() user: AuthUser){
+        if (USER_ID_REGEX.test(user.id)) {
+            throw new BadRequestException('User ID is invalid');
         }
-
-        try {
-            return await this.usersService.create(createUserDto);
-        } catch (error) {
-            if (error.code === 11000) {
-                throw new ConflictException('User with this Telegram ID already exists');
-            }
-            throw error;
-        }
+        return this.usersService.findByIdOrCreate(user.id)
     }
 
     @Get(':id')
     async getUser(@Param('id') id: string): Promise<User> {
-        return this.usersService.findById(BigInt(id));
+        if (USER_ID_REGEX.test(id)) {
+            throw new BadRequestException('User ID is invalid');
+        }
+        return this.usersService.findById(id);
     }
 
     @Get(':id/bought-gifts')
-    async getUserBoughtGifts(@Param('id') id: string): Promise<BoughtGift[]> {
-        try {
-            const userId = BigInt(id);
-            return await this.usersService.getBoughtGifts(userId);
-        } catch (error) {
-            if (error instanceof NotFoundException) {
-                throw error;
-            }
-            if (error.message.includes('BigInt')) {
-                throw new BadRequestException('Invalid user ID format');
-            }
-            throw new InternalServerErrorException('Failed to fetch bought gifts');
+    async getUserBoughtGifts(@GetUser() user: AuthUser): Promise<BoughtGift[]> {
+        if (USER_ID_REGEX.test(user.id)) {
+            throw new BadRequestException('User ID is invalid');
         }
+
+        return await this.usersService.getBoughtGifts(user.id);
     }
 
     @Get(':id/sended-gifts')
     async getUserSendedGifts(@Param('id') id: string): Promise<SendedGift[]> {
-        try {
-            const userId = BigInt(id);
-            return await this.usersService.getSendedGifts(userId);
-        } catch (error) {
-            if (error instanceof NotFoundException) {
-                throw error;
-            }
-            if (error.message.includes('BigInt')) {
-                throw new BadRequestException('Invalid user ID format');
-            }
-            throw new InternalServerErrorException('Failed to fetch sent gifts');
+        if (USER_ID_REGEX.test(id)) {
+            throw new BadRequestException('User ID is invalid');
         }
+
+        return await this.usersService.getSendedGifts(id);
     }
 }

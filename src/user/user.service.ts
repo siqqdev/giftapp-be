@@ -1,8 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './user.schema';
-import { CreateUserDto } from './user.dto';
 import { BoughtGift, SendedGift } from 'src/gift/gift.schema';
 
 @Injectable()
@@ -14,32 +13,34 @@ export class UserService {
         @InjectModel(SendedGift.name) private readonly sendedGiftModel: Model<SendedGift>
     ) {}
 
-    async create(createUserDto: CreateUserDto): Promise<User> {
-        const createdUser = new this.userModel({
-            id: createUserDto.id,
-            giftsReceived: 0
-        });
-        return createdUser.save();
+    async findByIdOrCreate(userId: string): Promise<User> {
+        let user = await this.userModel.findOne({ id: userId }).exec();
+        if (!user) {
+            user = await this.userModel.create({ id: userId });
+        }
+        return user;
     }
 
-    async findById(id: bigint): Promise<User> {
-        const user = await this.userModel.findOne({ id }).exec();
+    
+    async findById(id: string): Promise<User> {
+        const userId = BigInt(id);
+        const user = await this.userModel.findOne({ id: userId }).exec();
         if (!user) {
             throw new NotFoundException(`User with ID ${id} not found`);
         }
         return user;
     }
 
-    async getBoughtGifts(userId: bigint): Promise<BoughtGift[]> {
-        const user = await this.findById(userId);
+    async getBoughtGifts(userId: string): Promise<BoughtGift[]> {
+        const user = await this.boughtGiftModel.findById(userId);
         
         return this.boughtGiftModel.find({ user: user.id })
             .sort({ purchaseDate: -1 })
             .exec();
     }
 
-    async getSendedGifts(userId: bigint): Promise<SendedGift[]> {
-        const user = await this.findById(userId);
+    async getSendedGifts(userId: string): Promise<SendedGift[]> {
+        const user = await this.sendedGiftModel.findById(userId);
 
         return this.sendedGiftModel.find({
             $or: [

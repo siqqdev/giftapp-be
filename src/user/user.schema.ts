@@ -9,6 +9,9 @@ export class User {
     @Prop({ default: 0 })
     giftsReceived: number;
 
+    @Prop({ default: () => new Date(), required: true })
+    createdDate: Date;
+
     // @Prop({ type: [{ type: Types.ObjectId, ref: 'BoughtGift' }] })
     // boughtGifts: Types.ObjectId[];
 

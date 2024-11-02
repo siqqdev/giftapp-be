@@ -7,6 +7,8 @@ import { UserModule } from './user/user.module';
 import { GiftModule } from './gift/gift.module';
 import { ActionModule } from './action/action.module';
 import { BotService } from './telegram/bot.service';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/auth.guard';
 
 @Module({
   imports: [
@@ -17,6 +19,12 @@ import { BotService } from './telegram/bot.service';
     ActionModule
   ],
   controllers: [AppController],
-  providers: [AppService, BotService]
+  providers: [
+    AppService, 
+    BotService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    }]
 })
 export class AppModule {}
