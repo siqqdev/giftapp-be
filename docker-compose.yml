@@ -6,8 +6,8 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - npm_default
+      - fluxs-landing_app_network
 
 networks:
-  npm_default:
+  fluxs-landing_app_network:
     external: true
