@@ -5,6 +5,10 @@ services:
     container_name: giftapp-api
     ports:
       - "3000:3000"
+    environment:
+      - MONGO_CONNECTION=mongodb+srv://admin:JMGyeFiRf6RX7Gid@cluster0.s6pha.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - TELEGRAM_BOT_TOKEN=7747091538:AAH3jCG-xEv1AmvR-d7r6HYsiwjja5ayXZM
+      - WEB_APP_URL=https://giftapp-fe.vercel.app
     networks:
       - fluxs-landing_app_network
 
