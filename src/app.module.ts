@@ -9,6 +9,7 @@ import { ActionModule } from './action/action.module';
 import { BotService } from './telegram/bot.service';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
+import { BotModule } from './telegram/bot.module';
 
 @Module({
   imports: [
@@ -16,12 +17,12 @@ import { AuthGuard } from './auth/auth.guard';
     MongooseModule.forRoot(process.env.MONGO_CONNECTION),
     UserModule,
     GiftModule,
-    ActionModule
+    ActionModule,
+    BotModule
   ],
   controllers: [AppController],
   providers: [
     AppService, 
-    BotService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
