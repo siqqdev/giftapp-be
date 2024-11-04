@@ -9,6 +9,7 @@ import { ActionService } from "./action.service";
 import { TransferGiftService } from "./transferGift.service";
 import { BuyGiftController } from "./buyGift.controller";
 import { TransferGiftController } from "./transferGift.controller";
+import { HasherService } from "src/hash/hash.service";
 
 @Module({
     imports: [
@@ -35,7 +36,8 @@ import { TransferGiftController } from "./transferGift.controller";
     providers: [
         BuyGiftService,
         ActionService,
-        TransferGiftService
+        TransferGiftService,
+        HasherService
     ]
 })
 export class ActionModule { }

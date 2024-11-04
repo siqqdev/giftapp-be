@@ -38,6 +38,7 @@ export class BoughtGift {
 
 export const BoughtGiftSchema = SchemaFactory.createForClass(BoughtGift);
 
+@Schema()
 export class SendedGift {
     @Prop({ required: true })
     name: string;

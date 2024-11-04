@@ -1,16 +1,16 @@
 import { Controller, Post, Body, BadRequestException, Param } from "@nestjs/common";
-import { BuyGiftDto, InitTransferGiftDto } from "./action.dto";
-import { BuyGiftService } from "./buyGift.service";
-import { Model, Types } from "mongoose";
+import { CompleteTransferGiftDto, InitTransferGiftDto } from "./action.dto";
+import { Types } from "mongoose";
 import { TransferGiftService } from "./transferGift.service";
 import { GetUser } from "src/auth/auth.decorator";
 import { AuthUser } from "src/auth/auth.guard";
-import { InjectModel } from "@nestjs/mongoose";
-import { SendedGift } from "src/gift/gift.schema";
+import { HasherService } from "src/hash/hash.service";
 
 @Controller('transfer')
 export class TransferGiftController {
-    constructor(private readonly transferGiftService: TransferGiftService) { }
+    constructor(
+        private readonly transferGiftService: TransferGiftService,
+        private readonly hasherSevice: HasherService) { }
 
     @Post()
     async initTransferGift(@Body() transferDto: InitTransferGiftDto, @GetUser() user: AuthUser) {
@@ -19,11 +19,20 @@ export class TransferGiftController {
             throw new BadRequestException('Invalid gift ID format');
         }
 
-        return await this.transferGiftService.initializeGiftTransfer(boughtGiftId, user.id)
+        const action = await this.transferGiftService.initializeGiftTransfer(boughtGiftId, user.id)
+
+        const actionIdHash = this.hasherSevice.encrypt(action._id.toString())
+
+        return {
+            "hash": actionIdHash
+        }
     }
 
-    @Post('complete/:id')
-    async completeTransferGift(@Param() transferActionId: string, @GetUser() user: AuthUser){
+    @Post('complete')
+    async completeTransferGift(@Body() transferDto: CompleteTransferGiftDto, @GetUser() user: AuthUser){
+
+        const transferActionId = this.hasherSevice.decrypt(transferDto.actionIdHash)
+
         if (!Types.ObjectId.isValid(transferActionId)) {
             throw new BadRequestException('Invalid ID format');
         }

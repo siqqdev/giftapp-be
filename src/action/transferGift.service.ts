@@ -16,7 +16,7 @@ export class TransferGiftService {
         @InjectConnection() private connection: Connection
     ) { }
 
-    async initializeGiftTransfer(boughtGiftId: string, senderId: string): Promise<Action> {
+    async initializeGiftTransfer(boughtGiftId: string, senderId: string): Promise<Action & { _id: Types.ObjectId } > {
         const boughtGift = await this.boughtGiftModel
             .findById(boughtGiftId)
             .exec();
@@ -29,15 +29,15 @@ export class TransferGiftService {
             throw new BadRequestException('Cannot transfer not your gift')
         }
 
-        const [transferAction] = await this.actionModel.create([{
-            type: 'TransferAction',
+        const transferAction: Action & { _id: Types.ObjectId } = await this.actionModel.create({
+            type : 'TransferAction',
             user: boughtGift.user,
             gift: boughtGift.gift,
             giftName: boughtGift.name,
             date: new Date(),
             status: 'pending',
             boughtGiftId: boughtGift._id
-        }]);
+            });
 
         return transferAction;
     }
@@ -89,18 +89,14 @@ export class TransferGiftService {
                     throw new NotFoundException('Associated bought gift not found');
                 }
 
-                const sendedGift = {
+                const sendedGift = await this.sendedGiftModel.create([{
                     name: transferAction['giftName'],
                     sendedDate: new Date(),
                     totalAmount: giftItem.totalAmount,
                     gift: giftItem._id,
                     owner: receiverId,
                     sendedBy: boughtGift.user
-                }
-
-                console.log("Creating sended gift: ", sendedGift)
-
-                await this.sendedGiftModel.create([sendedGift], { session });
+                }], { session });
 
                 await this.boughtGiftModel
                     .findByIdAndDelete(boughtGift._id)
@@ -122,6 +118,8 @@ export class TransferGiftService {
                         { $inc: { giftsReceived: 1 } },
                         { session }
                     );
+
+                return sendedGift
             });
         } finally {
             session.endSession();

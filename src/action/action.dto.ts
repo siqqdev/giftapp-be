@@ -16,6 +16,12 @@ export class InitTransferGiftDto {
     boughtGiftId: string;
 }
 
+export class CompleteTransferGiftDto {
+    @IsNotEmpty()
+    @IsString()
+    actionIdHash: string;
+}
+
 export class PaginationQueryDto {
     @IsOptional()
     @IsNumber()
