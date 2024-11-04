@@ -2,18 +2,20 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import { Connection, Model, Types } from "mongoose";
 import { BoughtGift, Gift, SendedGift } from "src/gift/gift.schema";
-import { Action } from "./action.schema";
+import { Action } from "../action/action.schema";
 import { User } from "src/user/user.schema";
+import { BotService } from "src/telegram/bot.service";
 
 @Injectable()
 export class TransferGiftService {
     constructor(
-        @InjectModel(Action.name) private actionModel: Model<Action>,
         @InjectModel(User.name) private userModel: Model<User>,
+        @InjectModel(Action.name) private actionModel: Model<Action>,
         @InjectModel(BoughtGift.name) private boughtGiftModel: Model<BoughtGift>,
         @InjectModel(SendedGift.name) private sendedGiftModel: Model<SendedGift>,
         @InjectModel(Gift.name) private giftModel: Model<Gift>,
-        @InjectConnection() private connection: Connection
+        @InjectConnection() private connection: Connection,
+        private botService: BotService
     ) { }
 
     async initializeGiftTransfer(boughtGiftId: string, senderId: string): Promise<Action & { _id: Types.ObjectId } > {

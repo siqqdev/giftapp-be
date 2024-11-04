@@ -4,17 +4,21 @@ import { User, UserSchema } from "./user.schema";
 import { UserController } from "./user.controller";
 import { UserService } from "./user.service";
 import { BoughtGift, BoughtGiftSchema, SendedGift, SendedGiftSchema } from "src/gift/gift.schema";
+import { GiftModule } from "src/gift/gift.module";
 
 @Module({
     imports: [
         MongooseModule.forFeature([
             { name: User.name, schema: UserSchema },
-            { name: BoughtGift.name, schema: BoughtGiftSchema },
-            { name: SendedGift.name, schema: SendedGiftSchema }
-        ])
+            
+        ]),
+        GiftModule
     ],
     controllers: [UserController],
     providers: [UserService],
-    exports: [UserService]
+    exports: [
+        UserService,
+        MongooseModule 
+    ]
 })
 export class UserModule {}

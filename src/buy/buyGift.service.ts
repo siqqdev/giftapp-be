@@ -1,16 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import { InjectModel, InjectConnection } from "@nestjs/mongoose";
 import { Model, Connection, Types } from "mongoose";
+import { Action, BuyAction } from "src/action/action.schema";
 import { Gift, BoughtGift } from "src/gift/gift.schema";
 import { User } from "src/user/user.schema";
-import { Action, BuyAction } from "./action.schema";
 
 @Injectable()
 export class BuyGiftService {
     constructor(
-        @InjectModel(Action.name) private actionModel: Model<Action>,
-        @InjectModel(Gift.name) private giftModel: Model<Gift>,
         @InjectModel(User.name) private userModel: Model<User>,
+        @InjectModel(Gift.name) private giftModel: Model<Gift>,
+        @InjectModel(Action.name) private actionModel: Model<Action>,
         @InjectModel(BoughtGift.name) private boughtGiftModel: Model<BoughtGift>,
         @InjectConnection() private connection: Connection
     ) {}

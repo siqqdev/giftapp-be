@@ -1,6 +1,6 @@
 import { Controller, Post, Body, BadRequestException } from "@nestjs/common";
-import { BuyGiftDto } from "./action.dto";
 import { BuyGiftService } from "./buyGift.service";
+import { BuyGiftDto } from "./buyGift.dto";
 
 @Controller('buy')
 export class BuyGiftController {

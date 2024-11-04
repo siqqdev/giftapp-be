@@ -1,10 +1,10 @@
 import { Controller, Post, Body, BadRequestException, Param } from "@nestjs/common";
-import { CompleteTransferGiftDto, InitTransferGiftDto } from "./action.dto";
 import { Types } from "mongoose";
 import { TransferGiftService } from "./transferGift.service";
 import { GetUser } from "src/auth/auth.decorator";
 import { AuthUser } from "src/auth/auth.guard";
 import { HasherService } from "src/hash/hasher.service";
+import { InitTransferGiftDto, CompleteTransferGiftDto } from "./transferGift.dto";
 
 @Controller('transfer')
 export class TransferGiftController {

@@ -45,7 +45,8 @@ export class BotService {
 
     this.bot.on('inline_query', async (ctx) => {
       try {
-        const actionId = this.hasherSevice.decrypt(ctx.update.inline_query.query)
+        const value = ctx.update.inline_query.query
+        const actionId = this.hasherSevice.decrypt(value)
         const action = await this.actionService.getActionById(actionId)
         const giftItem = getGiftForYouItem(action.giftName, this.webAppUrl);
 
@@ -53,7 +54,9 @@ export class BotService {
           cache_time: 0
         });
       }
-      catch { }
+      catch (ex) {
+        console.error(ex)
+       }
     });
 
     this.bot.launch().then(() => {
@@ -61,5 +64,54 @@ export class BotService {
     }).catch(err => {
       console.error('Bot launch error:', err);
     });
+  }
+
+  async notifyGiving(tgUserId: string) {
+    try {
+      await this.bot.telegram.sendMessage(
+        tgUserId,
+        '🎁 You have successfully sent your gift! The recipient will be notified.'
+      );
+    } catch (error) {
+      console.error(`Failed to send giving notification to user ${tgUserId}:`, error);
+    }
+  }
+
+  async notifyReceiving(tgUserId: string, giftName: string, senderName?: string) {
+    try {
+      const message = senderName
+        ? `🎉 Congratulations! You've received a "${giftName}" from ${senderName}!`
+        : `🎉 Congratulations! You've received a "${giftName}"!`;
+
+      await this.bot.telegram.sendMessage(tgUserId, message, {
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [[
+            { text: 'View My Gifts', web_app: { url: `${this.webAppUrl}/gifts` } }
+          ]]
+        }
+      });
+    } catch (error) {
+      console.error(`Failed to send receiving notification to user ${tgUserId}:`, error);
+    }
+  }
+
+  async notifyPurchase(tgUserId: string, giftName: string) {
+    try {
+      await this.bot.telegram.sendMessage(
+        tgUserId,
+        `✨ Great choice! You've successfully purchased "${giftName}".\n\nYou can send it to your friends using the inline mode by typing @YourBot in any chat.`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[
+              { text: 'View My Gifts', web_app: { url: `${this.webAppUrl}/gifts` } }
+            ]]
+          }
+        }
+      );
+    } catch (error) {
+      console.error(`Failed to send purchase notification to user ${tgUserId}:`, error);
+    }
   }
 }

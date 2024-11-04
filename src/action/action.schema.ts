@@ -1,35 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Types } from "mongoose";
 
-// @Schema()
-// export class Action extends Document {
-//   @Prop({ required: true, enum: ['buy', 'transfer'] })
-//   type: string;
-
-//   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-//   user: Types.ObjectId;
-
-//   @Prop({ type: Types.ObjectId, ref: 'User' })
-//   toUser?: Types.ObjectId;
-
-//   @Prop({ type: Types.ObjectId, ref: 'Gift', required: true })
-//   gift: Types.ObjectId;
-
-//   @Prop()
-//   amount?: string
-
-//   @Prop({ enum: ['USDT', 'TON', 'BTC', 'ETH', 'LTC', 'BNB', 'TRX', 'USDC', 'JET'] })
-//   asset?: string;
-
-//   @Prop({ required: true })
-//   date: Date;
-
-//   @Prop({ enum: ['pending', 'completed', 'failed'], default: 'pending', required: true })
-//   status: string;
-// }
-
-// export const ActionSchema = SchemaFactory.createForClass(Action);
-
 @Schema({ discriminatorKey: 'type' })
 export class Action {
   @Prop({ required: true })

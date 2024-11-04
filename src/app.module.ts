@@ -11,6 +11,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { BotModule } from './telegram/bot.module';
 import { HasherModule } from './hash/hasher.module';
+import { TransferGiftModule } from './transfer/transferGift.module';
+import { BuyGiftModule } from './buy/buyGift.module';
 
 @Module({
   imports: [
@@ -20,7 +22,9 @@ import { HasherModule } from './hash/hasher.module';
       UserModule,
       GiftModule,
       ActionModule,
-      BotModule
+      BotModule,
+      BuyGiftModule,
+      TransferGiftModule
   ],
   controllers: [AppController],
   providers: [

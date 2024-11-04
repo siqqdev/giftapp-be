@@ -1,26 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
-
-export class BuyGiftDto {
-    @IsNotEmpty()
-    @IsString()
-    userId: string;
-
-    @IsNotEmpty()
-    @IsString()
-    giftId: string;
-}
-
-export class InitTransferGiftDto {
-    @IsNotEmpty()
-    @IsString()
-    boughtGiftId: string;
-}
-
-export class CompleteTransferGiftDto {
-    @IsNotEmpty()
-    @IsString()
-    actionIdHash: string;
-}
+import { IsNumber, IsOptional, Max, Min } from "class-validator";
 
 export class PaginationQueryDto {
     @IsOptional()

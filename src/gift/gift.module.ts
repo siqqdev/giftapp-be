@@ -10,12 +10,14 @@ import { User, UserSchema } from "src/user/user.schema";
         MongooseModule.forFeature([
             { name: Gift.name, schema: GiftSchema },
             { name: BoughtGift.name, schema: BoughtGiftSchema },
-            { name: SendedGift.name, schema: SendedGiftSchema },
-            { name: User.name, schema: UserSchema }
+            { name: SendedGift.name, schema: SendedGiftSchema }
         ])
     ],
     controllers: [GiftController],
     providers: [GiftService],
-    exports: [GiftService, MongooseModule]
+    exports: [
+        GiftService,
+        MongooseModule 
+    ]
 })
 export class GiftModule {}
