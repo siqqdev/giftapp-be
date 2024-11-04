@@ -10,22 +10,25 @@ import { BotService } from './telegram/bot.service';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { BotModule } from './telegram/bot.module';
+import { HasherModule } from './hash/hasher.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRoot(process.env.MONGO_CONNECTION),
-    UserModule,
-    GiftModule,
-    ActionModule,
-    BotModule
+      ConfigModule.forRoot({ isGlobal: true }),
+      MongooseModule.forRoot(process.env.MONGO_CONNECTION),
+      HasherModule,
+      UserModule,
+      GiftModule,
+      ActionModule,
+      BotModule
   ],
   controllers: [AppController],
   providers: [
-    AppService, 
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    }]
+      AppService,
+      {
+          provide: APP_GUARD,
+          useClass: AuthGuard,
+      }
+  ]
 })
 export class AppModule {}

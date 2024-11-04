@@ -8,21 +8,13 @@ import { BoughtGift, BoughtGiftSchema, SendedGift, SendedGiftSchema } from "src/
 @Module({
     imports: [
         MongooseModule.forFeature([
-            {
-                name: User.name,
-                schema: UserSchema
-            },
-            {
-                name: BoughtGift.name,
-                schema: BoughtGiftSchema,
-            },
-            {
-                name: SendedGift.name,
-                schema: SendedGiftSchema
-            }
+            { name: User.name, schema: UserSchema },
+            { name: BoughtGift.name, schema: BoughtGiftSchema },
+            { name: SendedGift.name, schema: SendedGiftSchema }
         ])
     ],
     controllers: [UserController],
-    providers: [UserService]
+    providers: [UserService],
+    exports: [UserService]
 })
-export class UserModule { }
+export class UserModule {}

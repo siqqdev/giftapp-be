@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { ActionService } from 'src/action/action.service';
+import { HasherService } from 'src/hash/hasher.service';
 import { Telegraf } from 'telegraf';
 import { InlineQueryResult } from 'telegraf/typings/core/types/typegram';
 
@@ -24,7 +26,10 @@ export class BotService {
   private readonly bot: Telegraf;
   webAppUrl: string;
 
-  constructor() {
+  constructor(
+    private readonly hasherSevice: HasherService,
+    private readonly actionService: ActionService
+  ) {
     this.bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
     this.webAppUrl = process.env.WEB_APP_URL
 
@@ -39,10 +44,16 @@ export class BotService {
     });
 
     this.bot.on('inline_query', async (ctx) => {
-      const giftItem = getGiftForYouItem("CaKA", this.webAppUrl);
-      await ctx.answerInlineQuery([giftItem], {
-        cache_time: 0
-      });
+      try {
+        const actionId = this.hasherSevice.decrypt(ctx.update.inline_query.query)
+        const action = await this.actionService.getActionById(actionId)
+        const giftItem = getGiftForYouItem(action.giftName, this.webAppUrl);
+
+        await ctx.answerInlineQuery([giftItem], {
+          cache_time: 0
+        });
+      }
+      catch { }
     });
 
     this.bot.launch().then(() => {

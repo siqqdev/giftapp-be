@@ -65,22 +65,22 @@ export class ActionService {
             this.actionModel.countDocuments(query)
         ]);
 
-        // Transform the response similar to user actions
-        // const transformedItems = items.map(action => {
-        //     const baseAction = action.toObject();
-            
-        //     if (action.type === 'BuyAction') {
-        //         baseAction.description = `User ${action.user.id} bought for ${action.amount} ${action.asset}`;
-        //     } else if (action.type === 'TransferAction') {
-        //         baseAction.description = `User ${action.user.id} transferred to user ${action.toUser.id}`;
-        //     }
-
-        //     return baseAction;
-        // });
-
         return {
             items: items,
             total
         };
+    }
+
+    
+    async getActionById(id: string): Promise<Action> {
+        const action = await this.actionModel
+            .findById(id)
+            .exec()
+
+        if(!action){
+            throw new NotFoundException(`Action with ID ${id} not found`);
+        }
+
+        return action
     }
 }

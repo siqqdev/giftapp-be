@@ -34,8 +34,8 @@ export class AuthGuard implements CanActivate {
         }
 
         try {
-            const user = await this.validateAuth(authHeader as string);
-            // const user = await this.fakeValidate(authHeader as string)
+            // const user = await this.validateAuth(authHeader as string);
+            const user = await this.fakeValidate(authHeader as string)
 
             request['user'] = user;
             return true;

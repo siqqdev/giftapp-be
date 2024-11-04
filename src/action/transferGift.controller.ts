@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 import { TransferGiftService } from "./transferGift.service";
 import { GetUser } from "src/auth/auth.decorator";
 import { AuthUser } from "src/auth/auth.guard";
-import { HasherService } from "src/hash/hash.service";
+import { HasherService } from "src/hash/hasher.service";
 
 @Controller('transfer')
 export class TransferGiftController {

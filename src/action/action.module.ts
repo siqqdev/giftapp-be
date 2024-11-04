@@ -9,7 +9,10 @@ import { ActionService } from "./action.service";
 import { TransferGiftService } from "./transferGift.service";
 import { BuyGiftController } from "./buyGift.controller";
 import { TransferGiftController } from "./transferGift.controller";
-import { HasherService } from "src/hash/hash.service";
+import { HasherService } from "src/hash/hasher.service";
+import { GiftModule } from "src/gift/gift.module";
+import { HasherModule } from "src/hash/hasher.module";
+import { UserModule } from "src/user/user.module";
 
 @Module({
     imports: [
@@ -21,12 +24,11 @@ import { HasherService } from "src/hash/hash.service";
                     { name: BuyAction.name, schema: BuyActionSchema },
                     { name: TransferAction.name, schema: TransferActionSchema }
                 ]
-            },
-            { name: Gift.name, schema: GiftSchema },
-            { name: User.name, schema: UserSchema },
-            { name: BoughtGift.name, schema: BoughtGiftSchema },
-            { name: SendedGift.name, schema: SendedGiftSchema }
-        ])
+            }
+        ]),
+        GiftModule,
+        UserModule, 
+        HasherModule
     ],
     controllers: [
         BuyGiftController,
@@ -36,8 +38,8 @@ import { HasherService } from "src/hash/hash.service";
     providers: [
         BuyGiftService,
         ActionService,
-        TransferGiftService,
-        HasherService
-    ]
+        TransferGiftService
+    ],
+    exports: [ActionService, TransferGiftService, BuyGiftService]
 })
-export class ActionModule { }
+export class ActionModule {}
