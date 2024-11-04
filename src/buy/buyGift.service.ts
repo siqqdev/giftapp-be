@@ -3,6 +3,7 @@ import { InjectModel, InjectConnection } from "@nestjs/mongoose";
 import { Model, Connection, Types } from "mongoose";
 import { Action, BuyAction } from "src/action/action.schema";
 import { Gift, BoughtGift } from "src/gift/gift.schema";
+import { BotService } from "src/telegram/bot.service";
 import { User } from "src/user/user.schema";
 
 @Injectable()
@@ -12,7 +13,8 @@ export class BuyGiftService {
         @InjectModel(Gift.name) private giftModel: Model<Gift>,
         @InjectModel(Action.name) private actionModel: Model<Action>,
         @InjectModel(BoughtGift.name) private boughtGiftModel: Model<BoughtGift>,
-        @InjectConnection() private connection: Connection
+        @InjectConnection() private connection: Connection,
+        private botService: BotService
     ) {}
 
     async buyGift(userId: string, giftId: string): Promise<Action> {
@@ -75,6 +77,13 @@ export class BuyGiftService {
                     { status: 'completed' },
                     { session }
                 );
+
+                try{
+                    await this.botService.notifyPurchase(userId, gift.name)
+                }
+                catch (e){
+                    console.error('Error sending purchase notification', e)
+                }
             });
 
             return buyAction;

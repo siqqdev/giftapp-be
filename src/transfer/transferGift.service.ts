@@ -121,6 +121,20 @@ export class TransferGiftService {
                         { session }
                     );
 
+                // Notify users without causing errors
+                try{
+                    await this.botService.notifyGiving(receiver.id, boughtGift.user.toString(), transferAction.giftName)
+                }
+                catch (e){
+                    console.error('Error sending giving notification', e)
+                }
+                try{
+                    await this.botService.notifyReceiving(boughtGift.user.toString(), receiver.id, transferAction.giftName)
+                }
+                catch (e){
+                    console.error('Error sending receiving notification', e)
+                }
+
                 return sendedGift
             });
         } finally {

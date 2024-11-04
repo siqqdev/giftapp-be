@@ -66,24 +66,22 @@ export class BotService {
     });
   }
 
-  async notifyGiving(tgUserId: string) {
+  async notifyGiving(receiverId: string, senderId: string, giftName: string) {
     try {
       await this.bot.telegram.sendMessage(
-        tgUserId,
-        '🎁 You have successfully sent your gift! The recipient will be notified.'
+        receiverId,
+        `⚡ ${senderId} has given you the gift of ${giftName}.`
       );
     } catch (error) {
-      console.error(`Failed to send giving notification to user ${tgUserId}:`, error);
+      console.error(`Failed to send giving notification to user ${receiverId}:`, error);
     }
   }
 
-  async notifyReceiving(tgUserId: string, giftName: string, senderName?: string) {
+  async notifyReceiving(receiverId: string, senderId: string, giftName: string) {
     try {
-      const message = senderName
-        ? `🎉 Congratulations! You've received a "${giftName}" from ${senderName}!`
-        : `🎉 Congratulations! You've received a "${giftName}"!`;
+      const message = `🔥 ${receiverId} received your gift of ${giftName}.`
 
-      await this.bot.telegram.sendMessage(tgUserId, message, {
+      await this.bot.telegram.sendMessage(senderId, message, {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [[
@@ -92,7 +90,7 @@ export class BotService {
         }
       });
     } catch (error) {
-      console.error(`Failed to send receiving notification to user ${tgUserId}:`, error);
+      console.error(`Failed to send receiving notification to user ${senderId}:`, error);
     }
   }
 
@@ -100,7 +98,7 @@ export class BotService {
     try {
       await this.bot.telegram.sendMessage(
         tgUserId,
-        `✨ Great choice! You've successfully purchased "${giftName}".\n\nYou can send it to your friends using the inline mode by typing @YourBot in any chat.`,
+        `✅ You have purchased the gift of ${giftName}.`,
         {
           parse_mode: 'HTML',
           reply_markup: {
