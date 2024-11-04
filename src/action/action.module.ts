@@ -13,6 +13,7 @@ import { HasherService } from "src/hash/hasher.service";
 import { GiftModule } from "src/gift/gift.module";
 import { HasherModule } from "src/hash/hasher.module";
 import { UserModule } from "src/user/user.module";
+import { BotModule } from "src/telegram/bot.module";
 
 @Module({
     imports: [
@@ -28,7 +29,8 @@ import { UserModule } from "src/user/user.module";
         ]),
         GiftModule,
         UserModule, 
-        HasherModule
+        HasherModule,
+        BotModule
     ],
     controllers: [
         BuyGiftController,
