@@ -2,22 +2,29 @@ import { Injectable } from '@nestjs/common';
 import { ActionService } from 'src/action/action.service';
 import { HasherService } from 'src/hash/hasher.service';
 import { Telegraf } from 'telegraf';
-import { InlineQueryResult } from 'telegraf/typings/core/types/typegram';
+import { InlineQueryResult, InlineQueryResultArticle } from 'telegraf/typings/core/types/typegram';
 
-export const getGiftForYouItem = (giftName: string, webAppUrl: string): InlineQueryResult => ({
+const createGiftInlineResult = (giftName: string, webAppUrl: string): InlineQueryResultArticle => ({
   type: 'article',
-  id: 'gift_for_you',
+  id: Date.now().toString(),
   title: 'Send Gift',
   description: `Send a gift of ${giftName}`,
-  // thumbnail_url: 'YOUR_GIFT_ICON_URL', // Replace with your gift icon URL
+  // thumb_url: 'https://your-domain.com/gift-icon.png', // Optional: Add your gift icon
   input_message_content: {
-    message_text: 'I have a <strong>gift</strong> for you! Tap the button below to open it.',
+    message_text: `🎁 I have a gift for you! Tap the button below to open it.`,
     parse_mode: 'HTML'
   },
   reply_markup: {
-    inline_keyboard: [[
-      { text: 'Receive Gift', web_app: { url: webAppUrl } }
-    ]]
+    inline_keyboard: [
+      [
+        {
+          text: 'Receive Gift',
+          url: "https://t.me/giftappdevbot/app"
+          // callback_data: 'receive_gift'
+          // web_app: { url: "" }
+        }
+      ]
+    ]
   }
 });
 
@@ -48,9 +55,13 @@ export class BotService {
         const value = ctx.update.inline_query.query
         const actionId = this.hasherSevice.decrypt(value)
         const action = await this.actionService.getActionById(actionId)
-        const giftItem = getGiftForYouItem(action.giftName, this.webAppUrl);
+        if(action.status !== "pending"){
+          return
+        }
 
-        await ctx.answerInlineQuery([giftItem], {
+        const item: InlineQueryResult = createGiftInlineResult(action.giftName, "https://t.me/giftappdevbot/app")
+
+        await ctx.answerInlineQuery([item], {
           cache_time: 0
         });
       }
@@ -70,7 +81,7 @@ export class BotService {
     try {
       await this.bot.telegram.sendMessage(
         receiverId,
-        `⚡ ${senderId} has given you the gift of ${giftName}.`
+        `⚡ ${await this.getUsername(senderId)} has given you the gift of ${giftName}.`
       );
     } catch (error) {
       console.error(`Failed to send giving notification to user ${receiverId}:`, error);
@@ -79,7 +90,7 @@ export class BotService {
 
   async notifyReceiving(receiverId: string, senderId: string, giftName: string) {
     try {
-      const message = `🔥 ${receiverId} received your gift of ${giftName}.`
+      const message = `🔥 ${await this.getUsername(receiverId)} received your gift of ${giftName}.`
 
       await this.bot.telegram.sendMessage(senderId, message, {
         parse_mode: 'HTML',
@@ -110,6 +121,19 @@ export class BotService {
       );
     } catch (error) {
       console.error(`Failed to send purchase notification to user ${tgUserId}:`, error);
+    }
+  }
+
+  async getUsername(userId: string): Promise<string | null> {
+    try {
+      const chat = await this.bot.telegram.getChat(userId);
+      if ('username' in chat) {
+        return chat.username || null;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Failed to get username for user ${userId}:`, error);
+      return null;
     }
   }
 }
