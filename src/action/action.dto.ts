@@ -10,6 +10,12 @@ export class BuyGiftDto {
     giftId: string;
 }
 
+export class InitTransferGiftDto {
+    @IsNotEmpty()
+    @IsString()
+    boughtGiftId: string;
+}
+
 export class PaginationQueryDto {
     @IsOptional()
     @IsNumber()

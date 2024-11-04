@@ -41,7 +41,8 @@ export class Action {
   @Prop({ type: Types.ObjectId, ref: 'Gift', required: true })
   gift: Types.ObjectId;
 
-  // TODO gift id of user bought gift
+  @Prop({ type: String })
+  giftName: string
 
   @Prop({ required: true })
   date: Date;
@@ -65,8 +66,11 @@ export const BuyActionSchema = SchemaFactory.createForClass(BuyAction);
 
 @Schema()
 export class TransferAction {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  toUser: Types.ObjectId;
+  @Prop({ required: false })
+  toUser: string
+
+  @Prop({ type: Types.ObjectId, ref: 'BoughtGift', required: true })
+  boughtGiftId: Types.ObjectId;
 }
 
 export const TransferActionSchema = SchemaFactory.createForClass(TransferAction);

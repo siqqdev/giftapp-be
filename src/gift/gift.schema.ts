@@ -51,12 +51,11 @@ export class SendedGift {
     @Prop({ type: Types.ObjectId, ref: 'Gift', required: true })
     gift: Types.ObjectId;
 
-    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-    owner: Types.ObjectId;
+    @Prop({ required: true })
+    owner: string;
 
-    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-    sendedBy: Types.ObjectId;
-    // TODO icon small, sended by
+    @Prop({ required: true })
+    sendedBy: string;
 }
 
 export const SendedGiftSchema = SchemaFactory.createForClass(SendedGift);
