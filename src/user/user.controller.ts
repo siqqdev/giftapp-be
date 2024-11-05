@@ -1,10 +1,11 @@
-import { Controller, Get, Param, BadRequestException } from "@nestjs/common";
+import { Controller, Get, Param, BadRequestException, DefaultValuePipe, ParseIntPipe, Query } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { User } from "./user.schema";
 import { BoughtGift, SendedGift } from "src/gift/gift.schema";
 import { USER_ID_REGEX } from "src/utils/userid.regex";
 import { AuthUser } from "src/auth/auth.guard";
 import { GetUser } from "src/auth/auth.decorator";
+import { LeaderboardResponseDto } from "./user.dto";
 
 @Controller('users')
 export class UserController {
@@ -25,6 +26,19 @@ export class UserController {
         }
 
         return await this.usersService.getBoughtGifts(user.id);
+    }
+
+    @Get('leaderboard')
+    async getLeaderboard(
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+        @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit: number,
+        @GetUser() user: AuthUser
+    ): Promise<LeaderboardResponseDto> {
+        if (limit > 50) {
+            throw new BadRequestException('Limit cannot exceed 50');
+        }
+
+        return this.usersService.getLeaderboard(page, limit, user.id);
     }
 
     @Get(':id')

@@ -11,12 +11,6 @@ export class User {
 
     @Prop({ default: () => new Date(), required: true })
     createdDate: Date;
-
-    // @Prop({ type: [{ type: Types.ObjectId, ref: 'BoughtGift' }] })
-    // boughtGifts: Types.ObjectId[];
-
-    // @Prop({ type: [{ type: Types.ObjectId, ref: 'SendedGift' }] })
-    // sendedGifts: Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
