@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ActionStatus } from 'src/action/action.schema';
 import { ActionService } from 'src/action/action.service';
 import { HasherService } from 'src/hash/hasher.service';
 import { Telegraf } from 'telegraf';
@@ -55,7 +56,7 @@ export class BotService {
         const value = ctx.update.inline_query.query
         const actionId = this.hasherSevice.decrypt(value)
         const action = await this.actionService.getActionById(actionId)
-        if(action.status !== "pending"){
+        if(action.status !== ActionStatus.PENDING){
           return
         }
 

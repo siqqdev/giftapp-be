@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { User } from "src/user/user.schema";
-import { Action } from "./action.schema";
+import { Action, ActionStatus } from "./action.schema";
 
 @Injectable()
 export class ActionService {
@@ -24,6 +24,7 @@ export class ActionService {
         const skip = (page - 1) * limit;
 
         const query = {
+            status: ActionStatus.COMPLETED,
             $or: [
                 { user: user.id },
                 { toUser: user.id }
@@ -53,7 +54,7 @@ export class ActionService {
     ): Promise<{ items: Action[]; total: number }> {
         const skip = (page - 1) * limit;
 
-        const query = { gift: new Types.ObjectId(giftId) };
+        const query = { gift: new Types.ObjectId(giftId), status: ActionStatus.COMPLETED };
 
         const [items, total] = await Promise.all([
             this.actionModel.find(query)
@@ -70,7 +71,6 @@ export class ActionService {
             total
         };
     }
-
     
     async getActionById(id: string): Promise<Action> {
         const action = await this.actionModel

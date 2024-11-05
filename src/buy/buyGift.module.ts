@@ -10,6 +10,7 @@ import { Action } from "rxjs/internal/scheduler/Action";
 import { ActionSchema } from "src/action/action.schema";
 import { Gift, GiftSchema, BoughtGift, BoughtGiftSchema } from "src/gift/gift.schema";
 import { User, UserSchema } from "src/user/user.schema";
+import { CryptoPayService } from "./cryptopay/cryptopay.service";
 
 @Module({
     imports: [
@@ -25,7 +26,7 @@ import { User, UserSchema } from "src/user/user.schema";
         BotModule
     ],
     controllers: [BuyGiftController],
-    providers: [BuyGiftService],
+    providers: [BuyGiftService, CryptoPayService],
     exports: [BuyGiftService]
 })
 export class BuyGiftModule {}

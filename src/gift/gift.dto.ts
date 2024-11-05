@@ -1,4 +1,5 @@
 import { IsString, IsEnum, IsNumber, Min, IsArray, ValidateNested, ArrayMinSize } from "class-validator";
+import { AssetType } from "src/buy/cryptopay/cryptopay.models";
 
 export class CreateGiftDto {
     @IsString()
@@ -7,7 +8,7 @@ export class CreateGiftDto {
     @IsString()
     price: string;
 
-    @IsEnum(['USDT', 'TON', 'BTC', 'ETH', 'LTC', 'BNB', 'TRX', 'USDC', 'JET'])
+    @IsEnum(AssetType)
     asset: string;
 
     @IsNumber()

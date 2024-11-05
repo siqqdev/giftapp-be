@@ -1,5 +1,12 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Types } from "mongoose";
+import { AssetType } from "src/buy/cryptopay/cryptopay.models";
+
+export enum ActionStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  FAILED = 'failed'
+}
 
 @Schema({ discriminatorKey: 'type' })
 export class Action {
@@ -18,21 +25,37 @@ export class Action {
   @Prop({ required: true })
   date: Date;
 
-  @Prop({ enum: ['pending', 'completed', 'failed'], default: 'pending', required: true })
+  @Prop({ enum: ActionStatus, default: ActionStatus.PENDING, required: true })
   status: string;
 }
 
 export const ActionSchema = SchemaFactory.createForClass(Action);
 
 @Schema()
+export class Invoice {
+  @Prop({ required: true, unique: true })
+  invoiceId: number;
+
+  @Prop({ required: true })
+  miniAppInvoiceUrl: string;
+
+  @Prop({ required: true })
+  botInvoiceUrl: string;
+}
+
+@Schema()
 export class BuyAction {
   @Prop({ required: true })
   amount: string;
 
-  @Prop({ required: true, enum: ['USDT', 'TON', 'BTC', 'ETH', 'LTC', 'BNB', 'TRX', 'USDC', 'JET'] })
+  @Prop({ required: true, enum: AssetType })
   asset: string;
+
+  @Prop({ type: Invoice, required: true })
+  invoice: Invoice;
 }
 
+export const InvoiceSchema = SchemaFactory.createForClass(Invoice);
 export const BuyActionSchema = SchemaFactory.createForClass(BuyAction);
 
 @Schema()

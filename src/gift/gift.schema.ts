@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Types } from "mongoose";
+import { AssetType } from "src/buy/cryptopay/cryptopay.models";
 
 @Schema()
 export class Gift {
@@ -9,7 +10,7 @@ export class Gift {
     @Prop({ required: true })
     price: string;
 
-    @Prop({ enum: ['USDT', 'TON', 'BTC', 'ETH', 'LTC', 'BNB', 'TRX', 'USDC', 'JET'], required: true })
+    @Prop({ enum: AssetType, required: true })
     asset: string;
 
     @Prop({ required: true })

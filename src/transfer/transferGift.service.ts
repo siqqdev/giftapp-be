@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import { Connection, Model, Types } from "mongoose";
 import { BoughtGift, Gift, SendedGift } from "src/gift/gift.schema";
-import { Action } from "../action/action.schema";
+import { Action, ActionStatus } from "../action/action.schema";
 import { User } from "src/user/user.schema";
 import { BotService } from "src/telegram/bot.service";
 
@@ -37,7 +37,7 @@ export class TransferGiftService {
             gift: boughtGift.gift,
             giftName: boughtGift.name,
             date: new Date(),
-            status: 'pending',
+            status: ActionStatus.PENDING,
             boughtGiftId: boughtGift._id
             });
 
@@ -59,7 +59,7 @@ export class TransferGiftService {
                 if (transferAction.type !== 'TransferAction') {
                     throw new BadRequestException('Invalid action type');
                 }
-                if (transferAction.status !== 'pending') {
+                if (transferAction.status !== ActionStatus.PENDING) {
                     throw new BadRequestException('Transfer is already completed or failed');
                 }
 
@@ -85,7 +85,7 @@ export class TransferGiftService {
                         .findByIdAndUpdate(
                             transferAction._id,
                             {
-                                status: 'failed'
+                                status: ActionStatus.FAILED
                             }
                         );
                     throw new NotFoundException('Associated bought gift not found');
@@ -108,7 +108,7 @@ export class TransferGiftService {
                     .findByIdAndUpdate(
                         transferActionId,
                         {
-                            status: 'completed',
+                            status: ActionStatus.COMPLETED,
                             toUser: receiver.id
                         },
                         { session }
