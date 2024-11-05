@@ -34,6 +34,12 @@ export class UserController {
         @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit: number,
         @GetUser() user: AuthUser
     ): Promise<LeaderboardResponseDto> {
+        if (page < 1) {
+            throw new BadRequestException('Page should be >= 1');
+        }
+        if (limit < 5) {
+            throw new BadRequestException('Limit should be at least 5');
+        }
         if (limit > 50) {
             throw new BadRequestException('Limit cannot exceed 50');
         }
