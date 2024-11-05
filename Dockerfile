@@ -1,14 +1,9 @@
-FROM oven/bun:1
-
+FROM node:20 as build
 WORKDIR /app
-
-COPY package*.json bun.lockb ./
-RUN bun install --frozen-lockfile
-
+COPY package*.json ./
+RUN npm install
 COPY . .
-RUN bun run build
-
+RUN npm run build
 ENV NODE_ENV production
 EXPOSE 3000
-
-CMD ["bun", "run", "start:prod"]
+CMD ["npm", "run", "start:prod"]
