@@ -1,5 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
 import { createHmac } from "crypto";
+import { IS_PUBLIC_KEY } from "./auth.decorator";
 
 export interface AuthUser {
     id: string;
@@ -17,7 +19,7 @@ export interface AuthUser {
 export class AuthGuard implements CanActivate {
     private readonly botToken: string;
 
-    constructor() {
+    constructor(private reflector: Reflector) {
         const token = process.env.TELEGRAM_BOT_TOKEN;
         if (!token) {
             throw new Error('TELEGRAM_BOT_TOKEN environment variable is not set');
@@ -26,6 +28,15 @@ export class AuthGuard implements CanActivate {
     }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
+        const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+
+        if (isPublic) {
+            return true;
+        }
+
         const request = context.switchToHttp().getRequest<Request>();
         const authHeader = request.headers['auth'];
 

@@ -5,6 +5,7 @@ import { CacheService } from 'src/cache/cache.service';
 import axios from 'axios';
 import { Response } from 'express';
 import { USER_ID_REGEX } from 'src/utils/userid.regex';
+import { Public } from 'src/auth/auth.decorator';
 
 @Controller('telegram')
 export class BotController {
@@ -49,6 +50,7 @@ export class BotController {
         return profile;
     }
 
+    @Public()
     @Get('image/:filePath(*)')  // (*) allows slashes in path parameter
     async getImage(
         @Param('filePath') filePath: string,
