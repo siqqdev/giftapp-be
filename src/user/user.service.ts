@@ -15,14 +15,16 @@ export class UserService {
     ) { }
 
     async findByIdOrCreate(authUser: AuthUser): Promise<User> {
-        let user = await this.userModel.findOne({ id: authUser.id }).exec();
+        const user = await this.userModel.findOne({ id: authUser.id }).exec();
+
         if (!user) {
-            user = await this.userModel.create(
-                {
-                    id: authUser.id,
-                    firstLastName: authUser.first_name + " " + authUser.last_name
-                });
+            const fullName = `${authUser.first_name || ''} ${authUser.last_name || ''}`.trim();
+            return this.userModel.create({
+                id: authUser.id,
+                firstLastName: fullName
+            });
         }
+        
         return user;
     }
 
