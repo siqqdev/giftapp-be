@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Telegraf } from "telegraf";
 import { Chat } from "telegraf/typings/core/types/typegram";
 
-interface PhotoUrls {
+interface PhotoPath {
     small: string | null;
     large: string | null;
 }
@@ -12,7 +12,7 @@ export interface TelegramUserProfile {
     firstName: string | null;
     lastName: string | null;
     username: string | null;
-    photos: PhotoUrls;
+    photosPath: PhotoPath;
     isPremium: boolean;
 }
 
@@ -24,7 +24,7 @@ export class TelegramUserService {
     try {
       const file = await this.bot.telegram.getFile(fileId);
       if (file.file_path) {
-        return `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+        return file.file_path;
       }
       return null;
     } catch (error) {
@@ -41,7 +41,7 @@ export class TelegramUserService {
         return null;
       }
 
-      let photos: PhotoUrls = {
+      let photos: PhotoPath = {
         small: null,
         large: null
       };
@@ -82,7 +82,7 @@ export class TelegramUserService {
         firstName: chat.first_name || null,
         lastName: chat.last_name || null,
         username: chat.username || null,
-        photos,
+        photosPath: photos,
         isPremium
       };
     } catch (error) {
