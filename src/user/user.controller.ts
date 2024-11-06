@@ -55,12 +55,12 @@ export class UserController {
         return this.usersService.findById(id);
     }
 
-    @Get(':id/sended-gifts')
-    async getUserSendedGifts(@Param('id') id: string): Promise<SendedGift[]> {
+    @Get(':id/received-gifts')
+    async getUserReceivedGifts(@Param('id') id: string): Promise<SendedGift[]> {
         if (USER_ID_REGEX.test(id)) {
             throw new BadRequestException('User ID is invalid');
         }
 
-        return await this.usersService.getSendedGifts(id);
+        return await this.usersService.getReceivedGifts(id);
     }
 }

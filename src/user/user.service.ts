@@ -37,10 +37,8 @@ export class UserService {
             .exec();
     }
 
-    async getSendedGifts(userId: string): Promise<SendedGift[]> {
-        const user = await this.sendedGiftModel.findOne({ id: userId });
-
-        return this.sendedGiftModel.find({
+    async getReceivedGifts(userId: string): Promise<SendedGift[]> {
+         return this.sendedGiftModel.find({
             $or: [
                 { owner: userId }
             ]
