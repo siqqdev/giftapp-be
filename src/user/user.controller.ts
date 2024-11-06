@@ -13,7 +13,7 @@ export class UserController {
 
     @Get('me')
     async getMe(@GetUser() user: AuthUser){
-        if (USER_ID_REGEX.test(user.id)) {
+        if (!USER_ID_REGEX.test(user.id)) {
             throw new BadRequestException('User ID is invalid');
         }
         return this.usersService.findByIdOrCreate(user.id)
@@ -21,7 +21,7 @@ export class UserController {
 
     @Get('bought-gifts')
     async getUserBoughtGifts(@GetUser() user: AuthUser): Promise<BoughtGift[]> {
-        if (USER_ID_REGEX.test(user.id)) {
+        if (!USER_ID_REGEX.test(user.id)) {
             throw new BadRequestException('User ID is invalid');
         }
 
@@ -49,7 +49,7 @@ export class UserController {
 
     @Get(':id')
     async getUser(@Param('id') id: string): Promise<User> {
-        if (USER_ID_REGEX.test(id)) {
+        if (!USER_ID_REGEX.test(id)) {
             throw new BadRequestException('User ID is invalid');
         }
         return this.usersService.findById(id);
@@ -57,7 +57,7 @@ export class UserController {
 
     @Get(':id/received-gifts')
     async getUserReceivedGifts(@Param('id') id: string): Promise<SendedGift[]> {
-        if (USER_ID_REGEX.test(id)) {
+        if (!USER_ID_REGEX.test(id)) {
             throw new BadRequestException('User ID is invalid');
         }
 
