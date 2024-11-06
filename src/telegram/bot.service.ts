@@ -4,6 +4,7 @@ import { ActionService } from 'src/action/action.service';
 import { HasherService } from 'src/hash/hasher.service';
 import { Telegraf } from 'telegraf';
 import { InlineQueryResult, InlineQueryResultArticle } from 'telegraf/typings/core/types/typegram';
+import { TelegramUserService } from './tg.user.service';
 
 const createGiftInlineResult = (giftName: string, webAppUrl: string): InlineQueryResultArticle => ({
   type: 'article',
@@ -33,13 +34,15 @@ const createGiftInlineResult = (giftName: string, webAppUrl: string): InlineQuer
 export class BotService {
   private readonly bot: Telegraf;
   webAppUrl: string;
+  private readonly telegramUserService: TelegramUserService;
 
   constructor(
     private readonly hasherSevice: HasherService,
-    private readonly actionService: ActionService
+    private readonly actionService: ActionService,
   ) {
     this.bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
     this.webAppUrl = process.env.WEB_APP_URL
+    this.telegramUserService = new TelegramUserService(this.bot);
 
     this.bot.command('start', async (ctx) => {
       await ctx.reply('🎁 Here you can buy and send gifts to your friends.', {
@@ -56,7 +59,7 @@ export class BotService {
         const value = ctx.update.inline_query.query
         const actionId = this.hasherSevice.decrypt(value)
         const action = await this.actionService.getActionById(actionId)
-        if(action.status !== ActionStatus.PENDING){
+        if (action.status !== ActionStatus.PENDING) {
           return
         }
 
@@ -68,7 +71,7 @@ export class BotService {
       }
       catch (ex) {
         console.error(ex)
-       }
+      }
     });
 
     this.bot.launch().then(() => {
@@ -76,6 +79,12 @@ export class BotService {
     }).catch(err => {
       console.error('Bot launch error:', err);
     });
+  }
+
+  async getUserProfile(userId: string) {
+    const profile = await this.telegramUserService.getUserProfile(userId)
+
+    return profile;
   }
 
   async notifyGiving(receiverId: string, senderId: string, giftName: string) {
