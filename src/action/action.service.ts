@@ -15,7 +15,7 @@ export class ActionService {
         userId: string,
         page: number = 1,
         limit: number = 10
-    ): Promise<{ items: Action[]; total: number }> {
+    ): Promise<Action[]> {
         const user = await this.userModel.findOne({ id: userId }).exec();
         if (!user) {
             throw new NotFoundException(`User with ID ${userId} not found`);
@@ -23,54 +23,37 @@ export class ActionService {
         
         const skip = (page - 1) * limit;
 
-        const query = {
+        const items = await this.actionModel.find({
             status: ActionStatus.COMPLETED,
             $or: [
-                { user: user.id },
-                { toUser: user.id }
+                { user: user._id },
+                { toUser: user._id }
             ]
-        };
+        })
+            .populate('gift')
+            .populate('user')
+            .sort({ date: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec()
+            ;
 
-        const [items, total] = await Promise.all([
-            this.actionModel.find(query)
-                .populate('gift')
-                .populate('user')
-                .sort({ date: -1 })
-                .skip(skip)
-                .limit(limit)
-                .exec(),
-            this.actionModel.countDocuments(query)
-        ]);
-
-        return {
-            items: items,
-            total
-        };
+        return items
     }
 
     async getRecentActionsByGift(
         giftId: string,
         page: number = 1,
         limit: number = 20
-    ): Promise<{ items: Action[]; total: number }> {
+    ): Promise<Action[]> {
         const skip = (page - 1) * limit;
 
-        const query = { gift: new Types.ObjectId(giftId), status: ActionStatus.COMPLETED };
-
-        const [items, total] = await Promise.all([
-            this.actionModel.find(query)
+        return this.actionModel.find({ gift: new Types.ObjectId(giftId), status: ActionStatus.COMPLETED })
                 .populate('gift')
                 .sort({ date: -1 })
                 .skip(skip)
                 .limit(limit)
-                .exec(),
-            this.actionModel.countDocuments(query)
-        ]);
-
-        return {
-            items: items,
-            total
-        };
+                .exec();
     }
     
     async getActionById(id: string): Promise<Action> {

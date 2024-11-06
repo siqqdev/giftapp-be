@@ -18,7 +18,7 @@ export class ActionController {
             throw new BadRequestException('User ID is invalid');
         }
 
-        const { items, total } = await this.actionService.getRecentActionsByUser(
+        const items = await this.actionService.getRecentActionsByUser(
             user.id,
             query.page,
             query.limit
@@ -26,10 +26,8 @@ export class ActionController {
 
         return {
             items,
-            total,
             page: query.page,
-            limit: query.limit,
-            pages: Math.ceil(total / query.limit)
+            limit: query.limit
         };
     }
 
@@ -38,7 +36,7 @@ export class ActionController {
         @Param('giftId') giftId: string,
         @Query() query: PaginationQueryDto
     ) {
-        const { items, total } = await this.actionService.getRecentActionsByGift(
+        const items = await this.actionService.getRecentActionsByGift(
             giftId,
             query.page,
             query.limit
@@ -46,10 +44,8 @@ export class ActionController {
 
         return {
             items,
-            total,
             page: query.page,
-            limit: query.limit,
-            pages: Math.ceil(total / query.limit)
+            limit: query.limit
         };
     }
 }

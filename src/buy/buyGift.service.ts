@@ -46,7 +46,6 @@ export class BuyGiftService {
                     gift.price,
                     gift.asset
                 );
-                console.log(invoice)
 
                 const invoiceModel: Invoice = {
                     invoiceId: invoice.id,
@@ -140,7 +139,7 @@ export class BuyGiftService {
                 const boughtGift = await this.boughtGiftModel.create([{
                     name: gift.name,
                     purchaseDate: new Date(),
-                    user: action.user,
+                    user: new Types.ObjectId(action.user),
                     gift: gift
                 }], { session });
 

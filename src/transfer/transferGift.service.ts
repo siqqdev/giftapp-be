@@ -18,28 +18,32 @@ export class TransferGiftService {
         private botService: BotService
     ) { }
 
-    async initializeGiftTransfer(boughtGiftId: string, senderId: string): Promise<Action & { _id: Types.ObjectId } > {
+    async initializeGiftTransfer(boughtGiftId: string, senderId: string): Promise<Action & { _id: Types.ObjectId }> {
         const boughtGift = await this.boughtGiftModel
             .findById(boughtGiftId)
             .exec();
-
         if (!boughtGift) {
-            throw new NotFoundException('Bought gift not found: ', boughtGiftId);
+            throw new NotFoundException('Bought gift not found');
         }
 
-        if (boughtGift.user !== senderId) {
+        const sender = await this.userModel.findOne({ id: senderId })
+        if(!sender){
+            throw new NotFoundException('Sender not found')
+        }
+
+        if (boughtGift.user.toString() !== sender._id.toString()) {
             throw new BadRequestException('Cannot transfer not your gift')
         }
 
         const transferAction: Action & { _id: Types.ObjectId } = await this.actionModel.create({
-            type : 'TransferAction',
+            type: 'TransferAction',
             user: boughtGift.user,
             gift: boughtGift.gift,
             giftName: boughtGift.name,
             date: new Date(),
             status: ActionStatus.PENDING,
             boughtGiftId: boughtGift._id
-            });
+        });
 
         return transferAction;
     }
@@ -81,8 +85,7 @@ export class TransferGiftService {
                     .session(session)
                     .exec();
                 if (!boughtGift) {
-                    await this.actionModel
-                        .findByIdAndUpdate(
+                    await this.actionModel.findByIdAndUpdate(
                             transferAction._id,
                             {
                                 status: ActionStatus.FAILED
@@ -96,20 +99,19 @@ export class TransferGiftService {
                     sendedDate: new Date(),
                     totalAmount: giftItem.totalAmount,
                     gift: giftItem._id,
-                    owner: receiverId,
-                    sendedBy: boughtGift.user
+                    owner: receiver._id,
+                    sendedBy: new Types.ObjectId(boughtGift.user)
                 }], { session });
 
                 await this.boughtGiftModel
                     .findByIdAndDelete(boughtGift._id)
                     .session(session);
 
-                await this.actionModel
-                    .findByIdAndUpdate(
+                await this.actionModel.findByIdAndUpdate(
                         transferActionId,
                         {
                             status: ActionStatus.COMPLETED,
-                            toUser: receiver.id
+                            toUser: receiver._id
                         },
                         { session }
                     );
@@ -122,16 +124,16 @@ export class TransferGiftService {
                     );
 
                 // Notify users without causing errors
-                try{
+                try {
                     await this.botService.notifyGiving(receiver.id, boughtGift.user.toString(), transferAction.giftName)
                 }
-                catch (e){
+                catch (e) {
                     console.error('Error sending giving notification', e)
                 }
-                try{
+                try {
                     await this.botService.notifyReceiving(boughtGift.user.toString(), receiver.id, transferAction.giftName)
                 }
-                catch (e){
+                catch (e) {
                     console.error('Error sending receiving notification', e)
                 }
 

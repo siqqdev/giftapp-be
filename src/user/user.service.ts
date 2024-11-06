@@ -39,19 +39,20 @@ export class UserService {
     async getBoughtGifts(userId: string): Promise<BoughtGift[]> {
         const user = await this.userModel.findOne({ id: userId });
 
-        return this.boughtGiftModel.find({ user: user.id })
+        return this.boughtGiftModel.find({ user: user._id })
             .sort({ purchaseDate: -1 })
             .exec();
     }
 
     async getReceivedGifts(userId: string): Promise<SendedGift[]> {
+        const user = await this.userModel.findOne({ id: userId });
+
         return this.sendedGiftModel.find({
             $or: [
-                { owner: userId }
+                { owner: user._id }
             ]
         })
             .populate('gift')
-            .populate('owner')
             .populate('sendedBy')
             .sort({ sendedDate: -1 })
             .exec();
