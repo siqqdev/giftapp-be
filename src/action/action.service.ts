@@ -34,6 +34,7 @@ export class ActionService {
         const [items, total] = await Promise.all([
             this.actionModel.find(query)
                 .populate('gift')
+                .populate('user')
                 .sort({ date: -1 })
                 .skip(skip)
                 .limit(limit)

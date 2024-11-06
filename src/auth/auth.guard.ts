@@ -46,7 +46,8 @@ export class AuthGuard implements CanActivate {
 
     private async fakeValidate(auth: string) {
         return {
-            id: auth
+            id: auth,
+            first_name: 'roman'
         }
     }
 

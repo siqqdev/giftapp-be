@@ -6,6 +6,9 @@ export class User {
     @Prop({ required: true, unique: true })
     id: string;
 
+    @Prop()
+    firstLastName: string
+
     @Prop({ default: 0 })
     giftsReceived: number;
 

@@ -16,7 +16,7 @@ export class UserController {
         if (!USER_ID_REGEX.test(user.id)) {
             throw new BadRequestException('User ID is invalid');
         }
-        return this.usersService.findByIdOrCreate(user.id)
+        return this.usersService.findByIdOrCreate(user)
     }
 
     @Get('bought-gifts')

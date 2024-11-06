@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { User } from './user.schema';
 import { BoughtGift, SendedGift } from 'src/gift/gift.schema';
 import { LeaderboardResponseDto } from './user.dto';
+import { AuthUser } from 'src/auth/auth.guard';
 
 @Injectable()
 export class UserService {
@@ -13,10 +14,14 @@ export class UserService {
         @InjectModel(SendedGift.name) private readonly sendedGiftModel: Model<SendedGift>
     ) { }
 
-    async findByIdOrCreate(userId: string): Promise<User> {
-        let user = await this.userModel.findOne({ id: userId }).exec();
+    async findByIdOrCreate(authUser: AuthUser): Promise<User> {
+        let user = await this.userModel.findOne({ id: authUser.id }).exec();
         if (!user) {
-            user = await this.userModel.create({ id: userId });
+            user = await this.userModel.create(
+                {
+                    id: authUser.id,
+                    firstLastName: authUser.first_name + " " + authUser.last_name
+                });
         }
         return user;
     }
@@ -38,7 +43,7 @@ export class UserService {
     }
 
     async getReceivedGifts(userId: string): Promise<SendedGift[]> {
-         return this.sendedGiftModel.find({
+        return this.sendedGiftModel.find({
             $or: [
                 { owner: userId }
             ]

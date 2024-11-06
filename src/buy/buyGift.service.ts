@@ -56,7 +56,7 @@ export class BuyGiftService {
 
                 const [createdAction] = await this.actionModel.create([{
                     type: BuyAction.name,
-                    user: user.id,
+                    user: user._id,
                     gift: new Types.ObjectId(giftId),
                     date: new Date(),
                     status: ActionStatus.PENDING,
@@ -85,6 +85,8 @@ export class BuyGiftService {
                 const action = await this.actionModel
                     .findById(buyActionId)
                     .session(session);
+
+                const user: User = await this.userModel.findById(action.user)
 
                 const buyAction = action as unknown as BuyAction
                 if (!buyAction.amount || !buyAction.asset || !buyAction.invoice) {
@@ -149,98 +151,19 @@ export class BuyGiftService {
                     { session }
                 );
 
+                try {
+                    await this.botService.notifyPurchase(user.id, gift.name)
+                }
+                catch (e) {
+                    console.error('Error sending purchase notification', e)
+                }
+
                 return boughtGift[0];
             });
         } catch (error) {
             throw error;
         } finally {
             session.endSession();
-        }
-    }
-
-    async buyGift(userId: string, giftId: string): Promise<Action> {
-        const session = await this.connection.startSession();
-        let buyAction: Action | null = null;
-
-        try {
-            await session.withTransaction(async () => {
-                // Find user and gift
-                const [user, gift] = await Promise.all([
-                    this.userModel.findOne({ id: userId }).session(session),
-                    this.giftModel.findById(giftId).session(session)
-                ]);
-
-                // Validate existence
-                if (!user) {
-                    throw new NotFoundException(`User with ID ${userId} not found`);
-                }
-                if (!gift) {
-                    throw new NotFoundException(`Gift with ID ${giftId} not found`);
-                }
-
-                // Check if gift is available
-                const availableAmount = gift.totalAmount - gift.soldAmount;
-                if (availableAmount <= 0) {
-                    throw new BadRequestException('Gift is out of stock');
-                }
-
-                // Create buy action
-                const [createdAction] = await this.actionModel.create([{
-                    type: BuyAction.name,
-                    user: user.id,
-                    gift: new Types.ObjectId(giftId),
-                    date: new Date(),
-                    status: ActionStatus.PENDING,
-                    amount: gift.price,
-                    asset: gift.asset
-                }], { session });
-
-                buyAction = createdAction; // Store for return value
-
-                // Create bought gift record
-                await this.boughtGiftModel.create([{
-                    name: gift.name,
-                    purchaseDate: new Date(),
-                    user: user.id,
-                    gift: new Types.ObjectId(giftId)
-                }], { session });
-
-                // Update gift sold amount
-                await this.giftModel.findByIdAndUpdate(
-                    giftId,
-                    { $inc: { soldAmount: 1 } },
-                    { session, new: true }
-                );
-
-                // Update action status to completed
-                await this.actionModel.findByIdAndUpdate(
-                    createdAction._id,
-                    { status: ActionStatus.COMPLETED },
-                    { session }
-                );
-
-                try {
-                    await this.botService.notifyPurchase(userId, gift.name)
-                }
-                catch (e) {
-                    console.error('Error sending purchase notification', e)
-                }
-            });
-
-            return buyAction;
-
-        } catch (error) {
-            console.error(error);
-
-            if (error instanceof NotFoundException || error instanceof BadRequestException) {
-                throw error;
-            }
-
-            throw new InternalServerErrorException(
-                'Failed to process gift purchase. Please try again.'
-            );
-        } finally {
-            await session.endSession();
         }
     }
 }
