@@ -14,7 +14,7 @@ export class ActionController {
         @GetUser() user: AuthUser,
         @Query() query: PaginationQueryDto
     ) {
-        if (USER_ID_REGEX.test(user.id)) {
+        if (!USER_ID_REGEX.test(user.id)) {
             throw new BadRequestException('User ID is invalid');
         }
 
