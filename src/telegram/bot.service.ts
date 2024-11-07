@@ -22,9 +22,9 @@ const createGiftInlineResult = (giftName: string, webAppUrl: string, hash: strin
       [
         {
           text: 'Receive Gift',
-          url: `https://t.me/cbcontest_giftapp_bot/app?start_param=${encodeURIComponent(hash)}`
+          // url: `https://t.me/cbcontest_giftapp_bot/app?start_param=${encodeURIComponent(hash)}`
           // callback_data: 'receive_gift'
-          // web_app: { url: "" }
+          web_app: { url: `https://t.me/cbcontest_giftapp_bot/app?start_param=${encodeURIComponent(hash)}` }
         }
       ]
     ]
