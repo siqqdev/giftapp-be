@@ -58,25 +58,61 @@ export class UserService {
             .exec();
     }
 
-    async getLeaderboard(page: number = 1, limit: number = 15, currentUserId: string): Promise<LeaderboardResponseDto> {
-        const total = await this.userModel.countDocuments();
-        const pages = Math.ceil(total / limit);
-        const skip = (page - 1) * limit;
-
+    async getLeaderboard(
+        page: number = 1, 
+        limit: number = 15, 
+        currentUserId: string,
+        search?: string
+    ): Promise<LeaderboardResponseDto> {
+        let query = {};
+        if (search) {
+            query = {
+                firstLastName: { 
+                    $regex: new RegExp(search, 'i') // Case-insensitive search
+                }
+            };
+        }
+    
         const users = await this.userModel
-            .find()
+            .find(query)
             .sort({ giftsReceived: -1, createdDate: 1 })
-            .skip(skip)
+            .skip((page - 1) * limit)
             .limit(limit)
             .lean()
             .exec();
-
+    
         const currentUser = await this.userModel.findOne({ id: currentUserId }).lean();
         if (!currentUser) {
             throw new NotFoundException('User not found');
         }
-
-        const currentUserRank = await this.userModel.countDocuments({
+    
+        // For current user rank, we need to consider both the search filter and ranking criteria
+        const currentUserRank = search 
+            ? await this.getCurrentUserFilteredRank(currentUser, search)
+            : await this.getCurrentUserRank(currentUser);
+    
+        const leaderboardUsers = users.map((user, index) => ({
+            id: user.id,
+            firstLastName: user.firstLastName,
+            giftsReceived: user.giftsReceived,
+            rank: (page - 1) * limit + index + 1
+        }));
+    
+        return {
+            users: leaderboardUsers,
+            currentPage: page,
+            currentUser: {
+                id: currentUser.id,
+                firstLastName: currentUser.firstLastName,
+                giftsReceived: currentUser.giftsReceived,
+                rank: currentUserRank
+            }
+        };
+    }
+    
+    private async getCurrentUserFilteredRank(currentUser: User, search: string): Promise<number> {
+        return await this.userModel.countDocuments({
+            firstLastName: { $regex: new RegExp(search, 'i') },
             $or: [
                 { giftsReceived: { $gt: currentUser.giftsReceived } },
                 {
@@ -85,23 +121,17 @@ export class UserService {
                 }
             ]
         }) + 1;
-
-        const leaderboardUsers = users.map((user, index) => ({
-            id: user.id,
-            giftsReceived: user.giftsReceived,
-            rank: skip + index + 1
-        }));
-
-        return {
-            users: leaderboardUsers,
-            total,
-            currentPage: page,
-            pages,
-            currentUser: {
-                id: currentUser.id,
-                giftsReceived: currentUser.giftsReceived,
-                rank: currentUserRank
-            }
-        };
+    }
+    
+    private async getCurrentUserRank(currentUser: User): Promise<number> {
+        return await this.userModel.countDocuments({
+            $or: [
+                { giftsReceived: { $gt: currentUser.giftsReceived } },
+                {
+                    giftsReceived: currentUser.giftsReceived,
+                    createdDate: { $lt: currentUser.createdDate }
+                }
+            ]
+        }) + 1;
     }
 }

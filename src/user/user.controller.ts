@@ -29,23 +29,24 @@ export class UserController {
     }
 
     @Get('leaderboard')
-    async getLeaderboard(
-        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-        @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit: number,
-        @GetUser() user: AuthUser
-    ): Promise<LeaderboardResponseDto> {
-        if (page < 1) {
-            throw new BadRequestException('Page should be >= 1');
-        }
-        if (limit < 5) {
-            throw new BadRequestException('Limit should be at least 5');
-        }
-        if (limit > 50) {
-            throw new BadRequestException('Limit cannot exceed 50');
-        }
-
-        return this.usersService.getLeaderboard(page, limit, user.id);
+async getLeaderboard(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit: number,
+    @GetUser() user: AuthUser,
+    @Query('search') search?: string
+): Promise<LeaderboardResponseDto> {
+    if (page < 1) {
+        throw new BadRequestException('Page should be >= 1');
     }
+    if (limit < 5) {
+        throw new BadRequestException('Limit should be at least 5');
+    }
+    if (limit > 50) {
+        throw new BadRequestException('Limit cannot exceed 50');
+    }
+
+    return this.usersService.getLeaderboard(page, limit, user.id, search);
+}
 
     @Get(':id')
     async getUser(@Param('id') id: string): Promise<User> {
