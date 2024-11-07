@@ -123,7 +123,7 @@ export class BuyGiftService {
                     throw new BadRequestException('Payment has expired');
                 }
 
-                if (paymentStatus === PaymentStatus.PENDING) {
+                if (paymentStatus === PaymentStatus.ACTIVE) {
                     throw new BadRequestException('Payment has not been completed');
                 }
 

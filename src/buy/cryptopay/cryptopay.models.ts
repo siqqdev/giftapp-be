@@ -1,7 +1,7 @@
 export enum PaymentStatus {
     PAID = 'paid',
     EXPIRED = 'expired',
-    PENDING = 'pending'
+    ACTIVE = 'active'
 }
 
 export enum AssetType {
