@@ -7,7 +7,7 @@ import { InlineQueryResult, InlineQueryResultArticle } from 'telegraf/typings/co
 import { TelegramUserService } from './tg.user.service';
 import { UserService } from 'src/user/user.service';
 
-const createGiftInlineResult = (giftName: string, webAppUrl: string): InlineQueryResultArticle => ({
+const createGiftInlineResult = (giftName: string, webAppUrl: string, hash: string): InlineQueryResultArticle => ({
   type: 'article',
   id: Date.now().toString(),
   title: 'Send Gift',
@@ -22,7 +22,7 @@ const createGiftInlineResult = (giftName: string, webAppUrl: string): InlineQuer
       [
         {
           text: 'Receive Gift',
-          url: "https://t.me/giftappdevbot/app"
+          url: `https://t.me/cbcontest_giftapp_bot/app?start_param=${encodeURIComponent(hash)}`
           // callback_data: 'receive_gift'
           // web_app: { url: "" }
         }
@@ -65,7 +65,7 @@ export class BotService {
           return
         }
 
-        const item: InlineQueryResult = createGiftInlineResult(action.giftName, "https://t.me/giftappdevbot/app")
+        const item: InlineQueryResult = createGiftInlineResult(action.giftName, "https://t.me/giftappdevbot/app", value)
 
         await ctx.answerInlineQuery([item], {
           cache_time: 0
@@ -126,7 +126,12 @@ export class BotService {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [[
-              { text: 'View My Gifts', web_app: { url: `${this.webAppUrl}/gifts` } }
+              {
+                text: 'View my gifts',
+                url: `https://t.me/cbcontest_giftapp_bot/app`
+                // callback_data: 'receive_gift'
+                // web_app: { url: "" }
+              }
             ]]
           }
         }
