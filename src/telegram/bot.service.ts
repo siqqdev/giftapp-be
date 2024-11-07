@@ -12,7 +12,7 @@ const createGiftInlineResult = (giftName: string, webAppUrl: string, hash: strin
   id: Date.now().toString(),
   title: 'Send Gift',
   description: `Send a gift of ${giftName}`,
-  // thumb_url: 'https://your-domain.com/gift-icon.png', // Optional: Add your gift icon
+  thumbnail_url: 'https://giftapp-fe.vercel.app/assets/logo-lgEQMm03.png', // Optional: Add your gift icon
   input_message_content: {
     message_text: `🎁 I have a gift for you! Tap the button below to open it.`,
     parse_mode: 'HTML'
@@ -22,7 +22,8 @@ const createGiftInlineResult = (giftName: string, webAppUrl: string, hash: strin
       [
         {
           text: 'Receive Gift',
-          url: `https://t.me/cbcontest_giftapp_bot/app?startapp=redirect_received_gift_${hash}`
+          // url: `https://t.me/cbcontest_giftapp_bot/app?startapp=redirect_received_gift_${hash}`
+          url: `https://www.google.com`
           // callback_data: 'receive_gift'
           // web_app: { url: `https://giftapp-fe.vercel.app/receive-gift-success/${encodeURIComponent(hash)}` }
         }
