@@ -29,4 +29,9 @@ export class BuyGiftController {
 
         return await this.buyGiftService.completePurchase(new Types.ObjectId(actionId));
     }
+
+    @Post('check-pending')
+    async checkPendingActions(){
+        return await this.buyGiftService.checkPendingActions()
+    }
 }

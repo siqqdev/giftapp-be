@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, HttpException } from "@nestjs/common";
 import { InjectModel, InjectConnection } from "@nestjs/mongoose";
 import { Model, Connection, Types } from "mongoose";
 import { Action, ActionStatus, BuyAction, Invoice } from "src/action/action.schema";
@@ -96,7 +96,6 @@ export class BuyGiftService {
                     throw new InternalServerErrorException('Buy action has invalid fields');
                 }
 
-
                 if (action.status !== ActionStatus.PENDING) {
                     throw new BadRequestException('This purchase is not in pending state');
                 }
@@ -105,6 +104,14 @@ export class BuyGiftService {
                 const paymentStatus = await this.cryptoPayService.getInvoiceStatus(
                     buyAction.invoice.invoiceId
                 );
+                if(!paymentStatus){
+                    await this.actionModel.findByIdAndUpdate(
+                        buyActionId,
+                        { status: ActionStatus.FAILED }
+                    );
+
+                    throw new NotFoundException(`Invoice with id ${buyAction.invoice.invoiceId} not found`);
+                }
 
                 if (paymentStatus === PaymentStatus.EXPIRED) {
                     // Update action status to failed if invoice is expired
@@ -116,8 +123,17 @@ export class BuyGiftService {
                     throw new BadRequestException('Payment has expired');
                 }
 
-                if (paymentStatus !== PaymentStatus.PAID) {
+                if (paymentStatus === PaymentStatus.PENDING) {
                     throw new BadRequestException('Payment has not been completed');
+                }
+
+                if (paymentStatus !== PaymentStatus.PAID){
+                    await this.actionModel.findByIdAndUpdate(
+                        buyActionId,
+                        { status: ActionStatus.FAILED }
+                    );
+
+                    throw new InternalServerErrorException('Invoice has unknown status')
                 }
 
                 // Update gift quantities
@@ -159,6 +175,22 @@ export class BuyGiftService {
             throw error;
         } finally {
             session.endSession();
+        }
+    }
+
+    async checkPendingActions() {
+        const actions = await this.actionModel.find({
+            status: ActionStatus.PENDING,
+            type: BuyAction.name
+        });
+
+        for (const action of actions) {
+            try{
+                await this.completePurchase(action._id);
+            }
+            catch (e){
+                console.log(`Checked action: ${action._id}`, e.message)
+            }
         }
     }
 }

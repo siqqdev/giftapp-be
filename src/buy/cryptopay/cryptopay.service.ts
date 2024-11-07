@@ -34,7 +34,7 @@ export class CryptoPayService {
     async getInvoiceStatus(invoiceId: number) {
         const invoices = await this.client.getInvoices({ids: [invoiceId]});
         if (!Array.isArray(invoices) || invoices.length !== 1) {
-            throw new NotFoundException(`Invoice with id ${invoiceId} not found`);
+            return null;
         }
 
         const invoice = invoices[0];
