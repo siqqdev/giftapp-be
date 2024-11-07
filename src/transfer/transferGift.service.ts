@@ -51,9 +51,10 @@ export class TransferGiftService {
 
     async completeGiftTransfer(transferActionId: Types.ObjectId, receiverId: string) {
         const session = await this.connection.startSession();
-
+    
         try {
-            await session.withTransaction(async () => {
+            // Store and return the transaction result
+            const receivedGift = await session.withTransaction(async () => {
                 const transferAction = await this.actionModel
                     .findById(transferActionId)
                     .session(session)
@@ -65,14 +66,14 @@ export class TransferGiftService {
                     throw new BadRequestException('Invalid action type');
                 }
                 if (transferAction.status !== ActionStatus.PENDING) {
-                    throw new BadRequestException('Transfer is already completed or failed');
+                    throw new BadRequestException(`Transfer is already completed or failed: ${transferAction.status}`);
                 }
-
+    
                 const giftItem = await this.giftModel.findById(transferAction.gift)
                 if (!giftItem) {
                     throw new InternalServerErrorException('The gift item does not exist: ', transferAction.gift.toString())
                 }
-
+    
                 const receiver = await this.userModel
                     .findOne({ id: receiverId })
                     .session(session)
@@ -80,7 +81,7 @@ export class TransferGiftService {
                 if (!receiver) {
                     throw new NotFoundException(`Receiver with ID ${receiverId} not found`);
                 }
-
+    
                 const boughtGift = await this.boughtGiftModel
                     .findById(transferAction['boughtGiftId'])
                     .session(session)
@@ -94,42 +95,46 @@ export class TransferGiftService {
                     );
                     throw new NotFoundException('Associated bought gift not found');
                 }
-
+    
                 const sender = await this.userModel.findById(boughtGift.user)
                 if(!sender){
                     throw new NotFoundException('Sender not found')
                 }
-
-                const receivedGift = await this.receivedGiftModel.create([{
-                    name: transferAction['giftName'],
-                    receivedDate: new Date(),
-                    totalAmount: giftItem.totalAmount,
-                    gift: giftItem._id,
-                    owner: receiver._id,
-                    receivedBy: new Types.ObjectId(boughtGift.user)
-                }], { session });
-
+    
+                const newReceivedGift = await this.receivedGiftModel.create([
+                    {
+                        name: transferAction['giftName'],
+                        receivedDate: new Date(),
+                        totalAmount: giftItem.totalAmount,
+                        gift: giftItem._id,
+                        owner: receiver._id,
+                        receivedBy: boughtGift.user  // Changed to use direct user ID
+                    }], 
+                    { session }
+                );
+    
                 await this.boughtGiftModel
                     .findByIdAndDelete(boughtGift._id)
                     .session(session);
-
-
+    
                 await this.userModel
                     .findOneAndUpdate(
                         receiver._id,
                         { $inc: { giftsReceived: 1 } },
                         { session }
                     );
-
+    
                 transferAction.status = ActionStatus.COMPLETED;
                 transferAction['toUser'] = receiver._id;
                 await transferAction.save({ session });
-
+    
                 await this.botService.notifyGiving(receiver.id, sender.id, transferAction.giftName)
                 await this.botService.notifyReceiving(sender.id, receiver.id, transferAction.giftName)
-
-                return receivedGift
+    
+                return newReceivedGift[0];
             });
+    
+            return receivedGift;
         } finally {
             session.endSession();
         }
