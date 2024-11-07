@@ -32,6 +32,7 @@ export class ActionService {
         })
             .populate('gift')
             .populate('user')
+            .populate('toUser')
             .sort({ date: -1 })
             .skip(skip)
             .limit(limit)
@@ -50,6 +51,8 @@ export class ActionService {
 
         return this.actionModel.find({ gift: new Types.ObjectId(giftId), status: ActionStatus.COMPLETED })
                 .populate('gift')
+                .populate('toUser')
+                .populate('user')
                 .sort({ date: -1 })
                 .skip(skip)
                 .limit(limit)

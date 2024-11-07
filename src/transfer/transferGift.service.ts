@@ -27,7 +27,7 @@ export class TransferGiftService {
         }
 
         const sender = await this.userModel.findOne({ id: senderId })
-        if(!sender){
+        if (!sender) {
             throw new NotFoundException('Sender not found')
         }
 
@@ -42,7 +42,8 @@ export class TransferGiftService {
             giftName: boughtGift.name,
             date: new Date(),
             status: ActionStatus.PENDING,
-            boughtGiftId: boughtGift._id
+            boughtGiftId: boughtGift._id,
+            toUser: null
         });
 
         return transferAction;
@@ -86,11 +87,11 @@ export class TransferGiftService {
                     .exec();
                 if (!boughtGift) {
                     await this.actionModel.findByIdAndUpdate(
-                            transferAction._id,
-                            {
-                                status: ActionStatus.FAILED
-                            }
-                        );
+                        transferAction._id,
+                        {
+                            status: ActionStatus.FAILED
+                        }
+                    );
                     throw new NotFoundException('Associated bought gift not found');
                 }
 
@@ -107,14 +108,6 @@ export class TransferGiftService {
                     .findByIdAndDelete(boughtGift._id)
                     .session(session);
 
-                await this.actionModel.findByIdAndUpdate(
-                        transferActionId,
-                        {
-                            status: ActionStatus.COMPLETED,
-                            toUser: receiver._id
-                        },
-                        { session }
-                    );
 
                 await this.userModel
                     .findOneAndUpdate(
@@ -122,6 +115,10 @@ export class TransferGiftService {
                         { $inc: { giftsReceived: 1 } },
                         { session }
                     );
+
+                transferAction.status = ActionStatus.COMPLETED;
+                transferAction['toUser'] = receiver._id;
+                await transferAction.save({ session });
 
                 // Notify users without causing errors
                 try {

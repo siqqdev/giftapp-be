@@ -17,12 +17,12 @@ export class BuyGiftService {
         @InjectModel(BoughtGift.name) private boughtGiftModel: Model<BoughtGift>,
         @InjectConnection() private connection: Connection,
         private botService: BotService,
-        private cryptoPayService: CryptoPayService 
+        private cryptoPayService: CryptoPayService
     ) { }
 
     async initPurchase(userId: string, giftId: string) {
         const session = await this.connection.startSession();
-        
+
         try {
             let result = await session.withTransaction(async () => {
                 const [user, gift] = await Promise.all([
@@ -77,7 +77,7 @@ export class BuyGiftService {
 
     async completePurchase(buyActionId: Types.ObjectId) {
         const session = await this.connection.startSession();
-        
+
         try {
             return await session.withTransaction(async () => {
                 // Find the buy action with session
@@ -85,6 +85,10 @@ export class BuyGiftService {
                     .findById(buyActionId)
                     .session(session);
 
+                if (!action) {
+                    throw new NotFoundException(`Buy action with ID ${buyActionId} not found`);
+                }
+                
                 const user: User = await this.userModel.findById(action.user)
 
                 const buyAction = action as unknown as BuyAction
@@ -92,9 +96,6 @@ export class BuyGiftService {
                     throw new InternalServerErrorException('Buy action has invalid fields');
                 }
 
-                if (!action) {
-                    throw new NotFoundException(`Buy action with ID ${buyActionId} not found`);
-                }
 
                 if (action.status !== ActionStatus.PENDING) {
                     throw new BadRequestException('This purchase is not in pending state');

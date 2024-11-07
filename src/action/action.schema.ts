@@ -60,9 +60,9 @@ export const BuyActionSchema = SchemaFactory.createForClass(BuyAction);
 
 @Schema()
 export class TransferAction {
-  @Prop({ required: false })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   toUser: Types.ObjectId
-
+  
   @Prop({ type: Types.ObjectId, ref: 'BoughtGift', required: true })
   boughtGiftId: Types.ObjectId;
 }
