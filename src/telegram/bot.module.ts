@@ -4,11 +4,13 @@ import { ActionModule } from "src/action/action.module";
 import { HasherModule } from "src/hash/hasher.module";
 import { BotController } from "./bot.controller";
 import { CacheService } from "src/cache/cache.service";
+import { UserModule } from "src/user/user.module";
 
 @Module({
     imports: [
         ActionModule,
-        HasherModule
+        HasherModule,
+        UserModule
     ],
     controllers: [BotController],
     providers: [BotService, CacheService],

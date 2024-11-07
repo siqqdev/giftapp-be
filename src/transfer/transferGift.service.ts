@@ -95,6 +95,11 @@ export class TransferGiftService {
                     throw new NotFoundException('Associated bought gift not found');
                 }
 
+                const sender = await this.userModel.findById(boughtGift.user)
+                if(!sender){
+                    throw new NotFoundException('Sender not found')
+                }
+
                 const receivedGift = await this.receivedGiftModel.create([{
                     name: transferAction['giftName'],
                     receivedDate: new Date(),
@@ -120,19 +125,8 @@ export class TransferGiftService {
                 transferAction['toUser'] = receiver._id;
                 await transferAction.save({ session });
 
-                // Notify users without causing errors
-                try {
-                    await this.botService.notifyGiving(receiver.id, boughtGift.user.toString(), transferAction.giftName)
-                }
-                catch (e) {
-                    console.error('Error sending giving notification', e)
-                }
-                try {
-                    await this.botService.notifyReceiving(boughtGift.user.toString(), receiver.id, transferAction.giftName)
-                }
-                catch (e) {
-                    console.error('Error sending receiving notification', e)
-                }
+                await this.botService.notifyGiving(receiver.id, sender.id, transferAction.giftName)
+                await this.botService.notifyReceiving(sender.id, receiver.id, transferAction.giftName)
 
                 return receivedGift
             });

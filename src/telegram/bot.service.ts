@@ -5,6 +5,7 @@ import { HasherService } from 'src/hash/hasher.service';
 import { Telegraf } from 'telegraf';
 import { InlineQueryResult, InlineQueryResultArticle } from 'telegraf/typings/core/types/typegram';
 import { TelegramUserService } from './tg.user.service';
+import { UserService } from 'src/user/user.service';
 
 const createGiftInlineResult = (giftName: string, webAppUrl: string): InlineQueryResultArticle => ({
   type: 'article',
@@ -39,6 +40,7 @@ export class BotService {
   constructor(
     private readonly hasherSevice: HasherService,
     private readonly actionService: ActionService,
+    private readonly userService: UserService
   ) {
     this.bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
     this.webAppUrl = process.env.WEB_APP_URL
@@ -91,7 +93,7 @@ export class BotService {
     try {
       await this.bot.telegram.sendMessage(
         receiverId,
-        `⚡ ${await this.getUsername(senderId)} has given you the gift of ${giftName}.`
+        `⚡ ${await this.getUserFirstLastName(senderId)} has given you the gift of ${giftName}.`
       );
     } catch (error) {
       console.error(`Failed to send giving notification to user ${receiverId}:`, error);
@@ -100,7 +102,7 @@ export class BotService {
 
   async notifyReceiving(receiverId: string, senderId: string, giftName: string) {
     try {
-      const message = `🔥 ${await this.getUsername(receiverId)} received your gift of ${giftName}.`
+      const message = `🔥 ${await this.getUserFirstLastName(receiverId)} received your gift of ${giftName}.`
 
       await this.bot.telegram.sendMessage(senderId, message, {
         parse_mode: 'HTML',
@@ -134,13 +136,14 @@ export class BotService {
     }
   }
 
-  async getUsername(userId: string): Promise<string | null> {
+  async getUserFirstLastName(userId: string): Promise<string | null> {
     try {
-      const chat = await this.bot.telegram.getChat(userId);
-      if ('username' in chat) {
-        return chat.username || null;
-      }
-      return null;
+      const user = await this.userService.findById(userId);
+      
+      if(user.firstLastName)
+        return user.firstLastName
+      else
+        return user.id
     } catch (error) {
       console.error(`Failed to get username for user ${userId}:`, error);
       return null;

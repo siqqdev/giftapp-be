@@ -88,7 +88,7 @@ export class BuyGiftService {
                 if (!action) {
                     throw new NotFoundException(`Buy action with ID ${buyActionId} not found`);
                 }
-                
+
                 const user: User = await this.userModel.findById(action.user)
 
                 const buyAction = action as unknown as BuyAction
@@ -151,12 +151,7 @@ export class BuyGiftService {
                     { session }
                 );
 
-                try {
-                    await this.botService.notifyPurchase(user.id, gift.name)
-                }
-                catch (e) {
-                    console.error('Error sending purchase notification', e)
-                }
+                await this.botService.notifyPurchase(user.id, gift.name)
 
                 return boughtGift[0];
             });
