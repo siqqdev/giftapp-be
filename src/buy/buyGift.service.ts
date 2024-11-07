@@ -133,7 +133,7 @@ export class BuyGiftService {
                         { status: ActionStatus.FAILED }
                     );
 
-                    throw new InternalServerErrorException('Invoice has unknown status')
+                    throw new InternalServerErrorException(`Invoice has unknown status: ${paymentStatus}`)
                 }
 
                 // Update gift quantities
