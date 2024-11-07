@@ -1,7 +1,7 @@
 import { Controller, Get, Param, BadRequestException, DefaultValuePipe, ParseIntPipe, Query } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { User } from "./user.schema";
-import { BoughtGift, SendedGift } from "src/gift/gift.schema";
+import { BoughtGift, ReceivedGift } from "src/gift/gift.schema";
 import { USER_ID_REGEX } from "src/utils/userid.regex";
 import { AuthUser } from "src/auth/auth.guard";
 import { GetUser } from "src/auth/auth.decorator";
@@ -57,7 +57,7 @@ async getLeaderboard(
     }
 
     @Get(':id/received-gifts')
-    async getUserReceivedGifts(@Param('id') id: string): Promise<SendedGift[]> {
+    async getUserReceivedGifts(@Param('id') id: string): Promise<ReceivedGift[]> {
         if (!USER_ID_REGEX.test(id)) {
             throw new BadRequestException('User ID is invalid');
         }

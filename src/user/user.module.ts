@@ -3,7 +3,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { User, UserSchema } from "./user.schema";
 import { UserController } from "./user.controller";
 import { UserService } from "./user.service";
-import { BoughtGift, BoughtGiftSchema, SendedGift, SendedGiftSchema } from "src/gift/gift.schema";
+import { BoughtGift, BoughtGiftSchema, ReceivedGift, ReceivedGiftSchema } from "src/gift/gift.schema";
 import { GiftModule } from "src/gift/gift.module";
 
 @Module({

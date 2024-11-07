@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import { Connection, Model, Types } from "mongoose";
-import { BoughtGift, Gift, SendedGift } from "src/gift/gift.schema";
+import { BoughtGift, Gift, ReceivedGift } from "src/gift/gift.schema";
 import { Action, ActionStatus } from "../action/action.schema";
 import { User } from "src/user/user.schema";
 import { BotService } from "src/telegram/bot.service";
@@ -12,7 +12,7 @@ export class TransferGiftService {
         @InjectModel(User.name) private userModel: Model<User>,
         @InjectModel(Action.name) private actionModel: Model<Action>,
         @InjectModel(BoughtGift.name) private boughtGiftModel: Model<BoughtGift>,
-        @InjectModel(SendedGift.name) private sendedGiftModel: Model<SendedGift>,
+        @InjectModel(ReceivedGift.name) private receivedGiftModel: Model<ReceivedGift>,
         @InjectModel(Gift.name) private giftModel: Model<Gift>,
         @InjectConnection() private connection: Connection,
         private botService: BotService
@@ -95,13 +95,13 @@ export class TransferGiftService {
                     throw new NotFoundException('Associated bought gift not found');
                 }
 
-                const sendedGift = await this.sendedGiftModel.create([{
+                const receivedGift = await this.receivedGiftModel.create([{
                     name: transferAction['giftName'],
-                    sendedDate: new Date(),
+                    receivedDate: new Date(),
                     totalAmount: giftItem.totalAmount,
                     gift: giftItem._id,
                     owner: receiver._id,
-                    sendedBy: new Types.ObjectId(boughtGift.user)
+                    receivedBy: new Types.ObjectId(boughtGift.user)
                 }], { session });
 
                 await this.boughtGiftModel
@@ -134,7 +134,7 @@ export class TransferGiftService {
                     console.error('Error sending receiving notification', e)
                 }
 
-                return sendedGift
+                return receivedGift
             });
         } finally {
             session.endSession();

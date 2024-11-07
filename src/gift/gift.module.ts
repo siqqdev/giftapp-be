@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { BoughtGift, BoughtGiftSchema, Gift, GiftSchema, SendedGift, SendedGiftSchema } from "./gift.schema";
+import { BoughtGift, BoughtGiftSchema, Gift, GiftSchema, ReceivedGift, ReceivedGiftSchema } from "./gift.schema";
 import { GiftController } from "./gift.controller";
 import { GiftService } from "./gift.service";
 import { User, UserSchema } from "src/user/user.schema";
@@ -10,7 +10,7 @@ import { User, UserSchema } from "src/user/user.schema";
         MongooseModule.forFeature([
             { name: Gift.name, schema: GiftSchema },
             { name: BoughtGift.name, schema: BoughtGiftSchema },
-            { name: SendedGift.name, schema: SendedGiftSchema }
+            { name: ReceivedGift.name, schema: ReceivedGiftSchema }
         ])
     ],
     controllers: [GiftController],

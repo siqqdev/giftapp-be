@@ -40,12 +40,12 @@ export class BoughtGift {
 export const BoughtGiftSchema = SchemaFactory.createForClass(BoughtGift);
 
 @Schema()
-export class SendedGift {
+export class ReceivedGift {
     @Prop({ required: true })
     name: string;
     
     @Prop({ required: true })
-    sendedDate: Date;
+    receivedDate: Date;
     
     @Prop({ required: true })
     totalAmount: number;
@@ -57,7 +57,7 @@ export class SendedGift {
     owner: Types.ObjectId;
 
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-    sendedBy: Types.ObjectId;
+    receivedBy: Types.ObjectId;
 }
 
-export const SendedGiftSchema = SchemaFactory.createForClass(SendedGift);
+export const ReceivedGiftSchema = SchemaFactory.createForClass(ReceivedGift);

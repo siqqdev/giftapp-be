@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './user.schema';
-import { BoughtGift, SendedGift } from 'src/gift/gift.schema';
+import { BoughtGift, ReceivedGift } from 'src/gift/gift.schema';
 import { LeaderboardResponseDto } from './user.dto';
 import { AuthUser } from 'src/auth/auth.guard';
 
@@ -11,7 +11,7 @@ export class UserService {
     constructor(
         @InjectModel(User.name) private readonly userModel: Model<User>,
         @InjectModel(BoughtGift.name) private readonly boughtGiftModel: Model<BoughtGift>,
-        @InjectModel(SendedGift.name) private readonly sendedGiftModel: Model<SendedGift>
+        @InjectModel(ReceivedGift.name) private readonly receivedGiftModel: Model<ReceivedGift>
     ) { }
 
     async findByIdOrCreate(authUser: AuthUser): Promise<User> {
@@ -44,17 +44,17 @@ export class UserService {
             .exec();
     }
 
-    async getReceivedGifts(userId: string): Promise<SendedGift[]> {
+    async getReceivedGifts(userId: string): Promise<ReceivedGift[]> {
         const user = await this.userModel.findOne({ id: userId });
 
-        return this.sendedGiftModel.find({
+        return this.receivedGiftModel.find({
             $or: [
                 { owner: user._id }
             ]
         })
             .populate('gift')
-            .populate('sendedBy')
-            .sort({ sendedDate: -1 })
+            .populate('receivedBy')
+            .sort({ receivedDate: -1 })
             .exec();
     }
 
