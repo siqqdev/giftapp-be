@@ -51,7 +51,7 @@ export class TransferGiftService {
 
     async completeGiftTransfer(transferActionId: Types.ObjectId, receiverId: string) {
         const session = await this.connection.startSession();
-    
+
         try {
             // Store and return the transaction result
             const receivedGift = await session.withTransaction(async () => {
@@ -68,12 +68,12 @@ export class TransferGiftService {
                 if (transferAction.status !== ActionStatus.PENDING) {
                     throw new BadRequestException(`Transfer is already completed or failed: ${transferAction.status}`);
                 }
-    
+
                 const giftItem = await this.giftModel.findById(transferAction.gift)
                 if (!giftItem) {
                     throw new InternalServerErrorException('The gift item does not exist: ', transferAction.gift.toString())
                 }
-    
+
                 const receiver = await this.userModel
                     .findOne({ id: receiverId })
                     .session(session)
@@ -81,7 +81,7 @@ export class TransferGiftService {
                 if (!receiver) {
                     throw new NotFoundException(`Receiver with ID ${receiverId} not found`);
                 }
-    
+
                 const boughtGift = await this.boughtGiftModel
                     .findById(transferAction['boughtGiftId'])
                     .session(session)
@@ -95,12 +95,12 @@ export class TransferGiftService {
                     );
                     throw new NotFoundException('Associated bought gift not found');
                 }
-    
+
                 const sender = await this.userModel.findById(boughtGift.user)
-                if(!sender){
+                if (!sender) {
                     throw new NotFoundException('Sender not found')
                 }
-    
+
                 const newReceivedGift = await this.receivedGiftModel.create([
                     {
                         name: transferAction['giftName'],
@@ -109,31 +109,35 @@ export class TransferGiftService {
                         gift: giftItem._id,
                         owner: receiver._id,
                         receivedBy: boughtGift.user  // Changed to use direct user ID
-                    }], 
+                    }],
                     { session }
                 );
-    
+
                 await this.boughtGiftModel
                     .findByIdAndDelete(boughtGift._id)
                     .session(session);
-    
+
                 await this.userModel
                     .findOneAndUpdate(
                         receiver._id,
                         { $inc: { giftsReceived: 1 } },
                         { session }
                     );
-    
+
                 transferAction.status = ActionStatus.COMPLETED;
                 transferAction['toUser'] = receiver._id;
                 await transferAction.save({ session });
-    
+
                 await this.botService.notifyGiving(receiver.id, sender.id, transferAction.giftName)
                 await this.botService.notifyReceiving(sender.id, receiver.id, transferAction.giftName)
-    
-                return newReceivedGift[0];
+
+                return await this.receivedGiftModel
+                    .findById(newReceivedGift[0]._id)
+                    .populate('receivedBy')
+                    .session(session)
+                    .exec();
             });
-    
+
             return receivedGift;
         } finally {
             session.endSession();
