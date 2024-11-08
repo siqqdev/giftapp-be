@@ -46,19 +46,11 @@ export class AuthGuard implements CanActivate {
 
         try {
             const user = await this.validateAuth(authHeader as string);
-            // const user = await this.fakeValidate(authHeader as string)
 
             request['user'] = user;
             return true;
         } catch (error) {
             throw new UnauthorizedException('Invalid authentication');
-        }
-    }
-
-    private async fakeValidate(auth: string) {
-        return {
-            id: auth,
-            first_name: 'roman'
         }
     }
 
