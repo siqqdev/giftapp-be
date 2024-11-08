@@ -12,7 +12,7 @@ const createGiftInlineResult = (giftName: string, webAppUrl: string, hash: strin
   id: Date.now().toString(),
   title: 'Send Gift',
   description: `Send a gift of ${giftName}`,
-  thumbnail_url: 'https://giftapp-fe.vercel.app/assets/logo-lgEQMm03.png', // Optional: Add your gift icon
+  thumbnail_url: `${webAppUrl}/assets/logo-lgEQMm03.png`,
   input_message_content: {
     message_text: `🎁 I have a gift for you! Tap the button below to open it.`,
     parse_mode: 'HTML'
@@ -22,7 +22,7 @@ const createGiftInlineResult = (giftName: string, webAppUrl: string, hash: strin
       [
         {
           text: 'Receive Gift',
-          url: `https://t.me/cbcontest_giftapp_bot/app?startapp=redirect_received_gift_${encodeURIComponent(hash)}`
+          url: `${process.env.TELEGRAM_BOT_URL}/app?startapp=redirect_received_gift_${encodeURIComponent(hash)}`
           // url: `https://www.google.com`
           // callback_data: 'receive_gift'
           // web_app: { url: `https://giftapp-fe.vercel.app/receive-gift-success/${encodeURIComponent(hash)}` }
@@ -48,13 +48,29 @@ export class BotService {
     this.telegramUserService = new TelegramUserService(this.bot);
 
     this.bot.command('start', async (ctx) => {
-      await ctx.reply('🎁 Here you can buy and send gifts to your friends.', {
-        reply_markup: {
-          inline_keyboard: [[
-            { text: 'Open App', web_app: { url: this.webAppUrl } }
-          ]]
-        }
-      });
+      try {
+        await ctx.replyWithPhoto(
+          { url: `${this.webAppUrl}/assets/logo-lgEQMm03.png` },
+          {
+            caption: '🎁 Here you can buy and send gifts to your friends.',
+            reply_markup: {
+              inline_keyboard: [[
+                { text: 'Open App', web_app: { url: this.webAppUrl } }
+              ]]
+            }
+          }
+        );
+      } catch (error) {
+        console.error('Error sending photo:', error);
+        // Fallback to just sending the message if photo fails
+        await ctx.reply('🎁 Here you can buy and send gifts to your friends.', {
+          reply_markup: {
+            inline_keyboard: [[
+              { text: 'Open App', web_app: { url: this.webAppUrl } }
+            ]]
+          }
+        });
+      }
     });
 
     this.bot.on('inline_query', async (ctx) => {
@@ -66,7 +82,7 @@ export class BotService {
           return
         }
 
-        const item: InlineQueryResult = createGiftInlineResult(action.giftName, "https://t.me/giftappdevbot/app", value)
+        const item: InlineQueryResult = createGiftInlineResult(action.giftName, this.webAppUrl, value)
 
         await ctx.answerInlineQuery([item], {
           cache_time: 0
@@ -92,9 +108,19 @@ export class BotService {
 
   async notifyGiving(receiverId: string, senderId: string, giftName: string) {
     try {
+      const message = `⚡ ${await this.getUserFirstLastName(senderId)} has given you the gift of ${giftName}.`
+
       await this.bot.telegram.sendMessage(
         receiverId,
-        `⚡ ${await this.getUserFirstLastName(senderId)} has given you the gift of ${giftName}.`
+        message,
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[
+              { text: 'View My Gifts', url: `${process.env.TELEGRAM_BOT_URL}/app?startapp=redirect_gifts` }
+            ]]
+          }
+        }
       );
     } catch (error) {
       console.error(`Failed to send giving notification to user ${receiverId}:`, error);
@@ -109,7 +135,7 @@ export class BotService {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [[
-            { text: 'View My Gifts', web_app: { url: `${this.webAppUrl}/gifts` } }
+            { text: 'Open app', url: `${process.env.TELEGRAM_BOT_URL}/app` }
           ]]
         }
       });
@@ -128,10 +154,8 @@ export class BotService {
           reply_markup: {
             inline_keyboard: [[
               {
-                text: 'View my gifts',
-                url: `https://t.me/cbcontest_giftapp_bot/app`
-                // callback_data: 'receive_gift'
-                // web_app: { url: "" }
+                text: 'Open gifts',
+                url: `${process.env.TELEGRAM_BOT_URL}/app?startapp=redirect_gifts`
               }
             ]]
           }
@@ -145,8 +169,8 @@ export class BotService {
   async getUserFirstLastName(userId: string): Promise<string | null> {
     try {
       const user = await this.userService.findById(userId);
-      
-      if(user.firstLastName)
+
+      if (user.firstLastName)
         return user.firstLastName
       else
         return user.id
