@@ -40,6 +40,8 @@ export class UserService {
         const user = await this.userModel.findOne({ id: userId });
 
         return this.boughtGiftModel.find({ user: user._id })
+            .populate('gift')
+            .populate('user')
             .sort({ purchaseDate: -1 })
             .exec();
     }
