@@ -11,7 +11,7 @@ import { TelegramKeyboardFactory } from './bot.keyboard.factory';
 import { TelegramMessages } from './bot.messages';
 
 @Injectable()
-export class BotService implements OnModuleInit {
+export class BotService {
   private readonly bot: Telegraf;
   private readonly config: TelegramConfig;
   private readonly telegramUserService: TelegramUserService;
@@ -28,19 +28,19 @@ export class BotService implements OnModuleInit {
     this.telegramUserService = new TelegramUserService(this.bot);
     this.keyboardFactory = new TelegramKeyboardFactory(this.config);
     this.inlineQueryFactory = new InlineQueryFactory(this.config);
-  }
 
-  async onModuleInit() {
-    await this.initializeBot();
+    this.initializeBot();
   }
 
   private async initializeBot() {
     this.setupStartCommand();
     this.setupInlineQuery();
     
-    await this.bot.launch()
-      .then(() => console.log('Bot started successfully'))
-      .catch(err => console.error('Bot launch error:', err));
+    this.bot.launch().then(() => {
+      console.log('Bot started successfully');
+    }).catch(err => {
+      console.error('Bot launch error:', err);
+    });
   }
 
   private setupStartCommand() {
