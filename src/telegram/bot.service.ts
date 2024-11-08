@@ -22,8 +22,8 @@ const createGiftInlineResult = (giftName: string, webAppUrl: string, hash: strin
       [
         {
           text: 'Receive Gift',
-          // url: `https://t.me/cbcontest_giftapp_bot/app?startapp=redirect_received_gift_${hash}`
-          url: `https://www.google.com`
+          url: `https://t.me/cbcontest_giftapp_bot/app?startapp=redirect_received_gift_${encodeURIComponent(hash)}`
+          // url: `https://www.google.com`
           // callback_data: 'receive_gift'
           // web_app: { url: `https://giftapp-fe.vercel.app/receive-gift-success/${encodeURIComponent(hash)}` }
         }
