@@ -1,125 +1,110 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ActionStatus } from 'src/action/action.schema';
 import { ActionService } from 'src/action/action.service';
 import { HasherService } from 'src/hash/hasher.service';
 import { Telegraf } from 'telegraf';
-import { InlineQueryResult, InlineQueryResultArticle } from 'telegraf/typings/core/types/typegram';
 import { TelegramUserService } from './tg.user.service';
 import { UserService } from 'src/user/user.service';
-
-const createGiftInlineResult = (giftName: string, webAppUrl: string, hash: string): InlineQueryResultArticle => ({
-  type: 'article',
-  id: Date.now().toString(),
-  title: 'Send Gift',
-  description: `Send a gift of ${giftName}`,
-  thumbnail_url: `${webAppUrl}/assets/logo-lgEQMm03.png`,
-  input_message_content: {
-    message_text: `🎁 I have a gift for you! Tap the button below to open it.`,
-    parse_mode: 'HTML'
-  },
-  reply_markup: {
-    inline_keyboard: [
-      [
-        {
-          text: 'Receive Gift',
-          url: `${process.env.TELEGRAM_BOT_URL}/app?startapp=redirect_received_gift_${encodeURIComponent(hash)}`
-          // url: `https://www.google.com`
-          // callback_data: 'receive_gift'
-          // web_app: { url: `https://giftapp-fe.vercel.app/receive-gift-success/${encodeURIComponent(hash)}` }
-        }
-      ]
-    ]
-  }
-});
+import { TelegramConfig, createTelegramConfig } from './bot.config';
+import { InlineQueryFactory } from './bot.inline-query.factory';
+import { TelegramKeyboardFactory } from './bot.keyboard.factory';
+import { TelegramMessages } from './bot.messages';
 
 @Injectable()
-export class BotService {
+export class BotService implements OnModuleInit {
   private readonly bot: Telegraf;
-  webAppUrl: string;
+  private readonly config: TelegramConfig;
   private readonly telegramUserService: TelegramUserService;
+  private readonly keyboardFactory: TelegramKeyboardFactory;
+  private readonly inlineQueryFactory: InlineQueryFactory;
 
   constructor(
-    private readonly hasherSevice: HasherService,
+    private readonly hasherService: HasherService,
     private readonly actionService: ActionService,
     private readonly userService: UserService
   ) {
-    this.bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-    this.webAppUrl = process.env.WEB_APP_URL
+    this.config = createTelegramConfig();
+    this.bot = new Telegraf(this.config.botToken);
     this.telegramUserService = new TelegramUserService(this.bot);
+    this.keyboardFactory = new TelegramKeyboardFactory(this.config);
+    this.inlineQueryFactory = new InlineQueryFactory(this.config);
+  }
 
+  async onModuleInit() {
+    await this.initializeBot();
+  }
+
+  private async initializeBot() {
+    this.setupStartCommand();
+    this.setupInlineQuery();
+    
+    await this.bot.launch()
+      .then(() => console.log('Bot started successfully'))
+      .catch(err => console.error('Bot launch error:', err));
+  }
+
+  private setupStartCommand() {
     this.bot.command('start', async (ctx) => {
       try {
         await ctx.replyWithPhoto(
-          { url: `${this.webAppUrl}/assets/logo-lgEQMm03.png` },
+          { url: this.config.assetsUrl },
           {
-            caption: '🎁 Here you can buy and send gifts to your friends.',
-            reply_markup: {
-              inline_keyboard: [[
-                { text: 'Open App', web_app: { url: this.webAppUrl } }
-              ]]
-            }
+            caption: TelegramMessages.welcomeMessage,
+            reply_markup: this.keyboardFactory.createOpenAppKeyboard()
           }
         );
       } catch (error) {
         console.error('Error sending photo:', error);
-        // Fallback to just sending the message if photo fails
-        await ctx.reply('🎁 Here you can buy and send gifts to your friends.', {
-          reply_markup: {
-            inline_keyboard: [[
-              { text: 'Open App', web_app: { url: this.webAppUrl } }
-            ]]
-          }
-        });
+        await ctx.reply(
+          TelegramMessages.welcomeMessage,
+          { reply_markup: this.keyboardFactory.createOpenAppKeyboard() }
+        );
       }
     });
+  }
 
+  private setupInlineQuery() {
     this.bot.on('inline_query', async (ctx) => {
       try {
-        const value = ctx.update.inline_query.query
-        const actionId = this.hasherSevice.decrypt(value)
-        const action = await this.actionService.getActionById(actionId)
-        if (action.status !== ActionStatus.PENDING) {
-          return
-        }
+        const value = ctx.update.inline_query.query;
+        const actionId = this.hasherService.decrypt(value);
+        const action = await this.actionService.getActionById(actionId);
+        
+        if (action.status !== ActionStatus.PENDING) return;
 
-        const item: InlineQueryResult = createGiftInlineResult(action.giftName, this.webAppUrl, value)
-
-        await ctx.answerInlineQuery([item], {
-          cache_time: 0
-        });
+        const item = this.inlineQueryFactory.createGiftInlineResult(action.giftName, value);
+        await ctx.answerInlineQuery([item], { cache_time: 0 });
+      } catch (ex) {
+        console.error(ex);
       }
-      catch (ex) {
-        console.error(ex)
-      }
-    });
-
-    this.bot.launch().then(() => {
-      console.log('Bot started successfully');
-    }).catch(err => {
-      console.error('Bot launch error:', err);
     });
   }
 
   async getUserProfile(userId: string) {
-    const profile = await this.telegramUserService.getUserProfile(userId)
+    return this.telegramUserService.getUserProfile(userId);
+  }
 
-    return profile;
+  private async getUserFirstLastName(userId: string): Promise<string> {
+    try {
+      const user = await this.userService.findById(userId);
+      return user.firstLastName || user.id;
+    } catch (error) {
+      console.error(`Failed to get username for user ${userId}:`, error);
+      return userId;
+    }
   }
 
   async notifyGiving(receiverId: string, senderId: string, giftName: string) {
     try {
-      const message = `⚡ ${await this.getUserFirstLastName(senderId)} has given you the gift of ${giftName}.`
+      const senderName = await this.getUserFirstLastName(senderId);
+      const message = TelegramMessages.createGivenMessage(senderName, giftName);
 
       await this.bot.telegram.sendMessage(
         receiverId,
         message,
         {
           parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [[
-              { text: 'View My Gifts', url: `${process.env.TELEGRAM_BOT_URL}/app?startapp=redirect_gifts` }
-            ]]
-          }
+          reply_markup: this.keyboardFactory.createViewGiftsKeyboard()
         }
       );
     } catch (error) {
@@ -129,16 +114,17 @@ export class BotService {
 
   async notifyReceiving(receiverId: string, senderId: string, giftName: string) {
     try {
-      const message = `🔥 ${await this.getUserFirstLastName(receiverId)} received your gift of ${giftName}.`
+      const receiverName = await this.getUserFirstLastName(receiverId);
+      const message = TelegramMessages.createReceivedMessage(receiverName, giftName);
 
-      await this.bot.telegram.sendMessage(senderId, message, {
-        parse_mode: 'HTML',
-        reply_markup: {
-          inline_keyboard: [[
-            { text: 'Open app', url: `${process.env.TELEGRAM_BOT_URL}/app` }
-          ]]
+      await this.bot.telegram.sendMessage(
+        senderId,
+        message,
+        {
+          parse_mode: 'HTML',
+          reply_markup: this.keyboardFactory.createOpenAppKeyboard()
         }
-      });
+      );
     } catch (error) {
       console.error(`Failed to send receiving notification to user ${senderId}:`, error);
     }
@@ -148,35 +134,14 @@ export class BotService {
     try {
       await this.bot.telegram.sendMessage(
         tgUserId,
-        `✅ You have purchased the gift of ${giftName}.`,
+        TelegramMessages.createPurchaseMessage(giftName),
         {
           parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [[
-              {
-                text: 'Open gifts',
-                url: `${process.env.TELEGRAM_BOT_URL}/app?startapp=redirect_gifts`
-              }
-            ]]
-          }
+          reply_markup: this.keyboardFactory.createViewGiftsKeyboard()
         }
       );
     } catch (error) {
       console.error(`Failed to send purchase notification to user ${tgUserId}:`, error);
-    }
-  }
-
-  async getUserFirstLastName(userId: string): Promise<string | null> {
-    try {
-      const user = await this.userService.findById(userId);
-
-      if (user.firstLastName)
-        return user.firstLastName
-      else
-        return user.id
-    } catch (error) {
-      console.error(`Failed to get username for user ${userId}:`, error);
-      return null;
     }
   }
 }
