@@ -1,4 +1,4 @@
-import { Controller, Post, Body, BadRequestException, Param } from "@nestjs/common";
+import { Controller, Post, Get, Body, BadRequestException, Param } from "@nestjs/common";
 import { BuyGiftService } from "./buyGift.service";
 import { BuyGiftDto } from "./buyGift.dto";
 import { Types } from "mongoose";
@@ -30,7 +30,7 @@ export class BuyGiftController {
         return await this.buyGiftService.completePurchase(new Types.ObjectId(actionId));
     }
 
-    @Post('check-pending')
+    @Get('check-pending')
     async checkPendingActions(){
         return await this.buyGiftService.checkPendingActions()
     }
